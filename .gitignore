@@ -41,3 +41,14 @@ example
 # generated native folders
 /ios
 /android
+
+# Metro cache kept on this drive (see metro.config.js)
+.metro-cache/
+
+# local env files (keep .env.example committed)
+.env
+server/.env
+
+# machine-specific npm cache location (F: drive on this PC)
+.npmrc
+

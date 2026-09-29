@@ -1,56 +1,58 @@
-# Welcome to your Expo app 👋
+# Vartify
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Your personal newspaper + AI news analyst.** Vartify groups coverage of the same event from multiple publishers, summarises the facts they share, explains why it matters to *you*, and always links back to the original reporting.
 
-## Get started
+> **Status: Phase 1 (demo data).** Every screen works end-to-end on bundled demo stories. Demo publishers are fictional and all links point to `example.com` — nothing pretends to be real reporting.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Scan the QR code with **Expo Go** on your phone (same Wi-Fi). Press `w` to open it in a browser.
 
-### Other setup steps
+## What's inside
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Screen | What it does |
+|---|---|
+| Onboarding | Name → interests → priorities → summary style → briefing length |
+| Home | Greeting, briefing entry, **Must Know**, **For You**, **Quick Read**, **Explore** |
+| Briefing | Fits stories into 5/10/15/30 minutes, grouped by your priorities, with progress |
+| Explore | Search stories, topics, organisations, people, countries; browse topics |
+| Story | What happened, key points, why it matters, background, what's next, confidence, every source |
+| Ask AI | Answers from your feed only, split into **Facts / Analysis / Uncertainty** |
+| Saved | Saved stories with date, category, source and remove |
+| Profile | Interests, priorities, briefing, style, notifications (opt-in), sources, privacy, reset |
 
-## Learn more
+## Project structure
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+src/
+  app/            Screens (Expo Router). (tabs)/ = bottom tabs; story/[id], ask, onboarding
+  components/     UI primitives (ui/), story cards & sources (story/), assistant answer view
+  features/       Business logic: personalization, briefing, search, assistant, notifications
+  services/       Service interfaces + mock / http / storage implementations (index.ts picks one)
+  state/          React context stores: user profile (persisted) and news feed
+  types/          Domain model: StoryCluster, Article, NewsSource, UserProfile, …
+  data/mock/      Demo stories and fictional demo publishers
+  constants/      Theme (colours, type, spacing) and topic list
+  config/         Environment (EXPO_PUBLIC_* only)
+server/           Backend-ready pipeline types, reference clustering, AI-output validator
+docs/             ARCHITECTURE.md
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the data flow, ranking formula, API contract and security rules.
 
-## Join the community
+## Keeping the C: drive light
 
-Join our community of developers creating universal apps.
+- `.npmrc` sends npm's download cache to `F:/dev-cache/npm`.
+- `metro.config.js` keeps Metro's build cache in `.metro-cache/` inside this project. Delete that folder any time to free space.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Checks
+
+```bash
+npx tsc --noEmit
+npx expo lint
+```
