@@ -32,7 +32,7 @@ export function StoryCard({ story, mustKnow }: { story: StoryCluster; mustKnow?:
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       {/* The story body and the action buttons are siblings, never nested buttons. */}
       <Pressable
-        onPress={actions.open}
+        onPress={() => actions.open()}
         accessibilityRole="button"
         accessibilityLabel={`${story.canonicalHeadline}. Open story`}
         style={({ pressed }) => [styles.body, { opacity: pressed ? 0.85 : 1 }]}>
@@ -85,7 +85,7 @@ export function StoryCard({ story, mustKnow }: { story: StoryCluster; mustKnow?:
       </Pressable>
 
       <View style={[styles.actions, { borderColor: colors.border }]}>
-        <Button label="Read full story" size="sm" onPress={actions.open} iconRight="arrow-forward" />
+        <Button label="Read full story" size="sm" onPress={() => actions.open()} iconRight="arrow-forward" />
         <View style={styles.iconRow}>
           <IconButton
             icon="bookmark-outline"

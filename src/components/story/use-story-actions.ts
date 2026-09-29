@@ -19,7 +19,8 @@ export function useStoryActions(story: StoryCluster) {
     saved,
     liked,
     read,
-    open: () => router.push({ pathname: '/story/[id]', params: { id } }),
+    /** `from: 'briefing'` shows Prev/Next through the briefing on the story page. */
+    open: (from?: 'briefing') => router.push({ pathname: '/story/[id]', params: from ? { id, from } : { id } }),
     toggleSave: () => {
       toggleSave(story);
       snackbar(saved ? 'Removed from Saved' : 'Saved for later', saved ? undefined : { label: 'Undo', onPress: () => toggleSave(story) });

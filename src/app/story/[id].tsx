@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BriefingNav } from '@/components/story/briefing-nav';
 import { SourceList } from '@/components/story/source-list';
 import { Eyebrow } from '@/components/story/story-meta';
 import { useStoryActions } from '@/components/story/use-story-actions';
@@ -26,7 +27,7 @@ const CONFIDENCE_TEXT: Record<Confidence, string> = {
 };
 
 export default function StoryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   const { getStory, status } = useNews();
   const { colors } = useTheme();
   const story = getStory(id);
@@ -46,10 +47,10 @@ export default function StoryScreen() {
       </View>
     );
   }
-  return <StoryDetail story={story} />;
+  return <StoryDetail story={story} fromBriefing={from === 'briefing'} />;
 }
 
-function StoryDetail({ story }: { story: StoryCluster }) {
+function StoryDetail({ story, fromBriefing }: { story: StoryCluster; fromBriefing: boolean }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { markRead } = useUser();
@@ -80,7 +81,8 @@ function StoryDetail({ story }: { story: StoryCluster }) {
           </>
         }
       />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + Spacing.xxxl }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: fromBriefing ? Spacing.xxl : insets.bottom + Spacing.xxxl }]}>
         <View style={styles.inner}>
           <Eyebrow story={story} />
           <AppText variant="display" accessibilityRole="header" style={styles.headline}>
@@ -166,6 +168,7 @@ function StoryDetail({ story }: { story: StoryCluster }) {
           <Button label="Ask AI about this story" icon="sparkles-outline" variant="secondary" onPress={askAbout} />
         </View>
       </ScrollView>
+      {fromBriefing && <BriefingNav currentId={story.clusterId} />}
     </View>
   );
 }

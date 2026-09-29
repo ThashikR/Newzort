@@ -74,11 +74,14 @@ export default function BriefingScreen() {
             style={[styles.fill, { backgroundColor: colors.positive, width: total ? `${(readCount / total) * 100}%` : '0%' }]}
           />
         </View>
-        {nextUnread && (
+        {total > 0 && (
           <Button
-            label={readCount === 0 ? 'Start briefing' : 'Continue briefing'}
-            icon="play"
-            onPress={() => router.push({ pathname: '/story/[id]', params: { id: nextUnread } })}
+            label={readCount === 0 ? 'Start briefing' : nextUnread ? 'Continue briefing' : 'Read again from the start'}
+            icon={nextUnread ? 'play' : 'refresh'}
+            variant={nextUnread ? 'primary' : 'secondary'}
+            onPress={() =>
+              router.push({ pathname: '/story/[id]', params: { id: nextUnread ?? briefing.storyIds[0], from: 'briefing' } })
+            }
           />
         )}
       </View>
@@ -100,7 +103,7 @@ export default function BriefingScreen() {
             {section.stories.map((r, j) => (
               <View key={r.story.clusterId}>
                 {j > 0 && <Divider />}
-                <StoryRow story={r.story} index={offsets[i] + j + 1} showSave={false} />
+                <StoryRow story={r.story} index={offsets[i] + j + 1} showSave={false} from="briefing" />
               </View>
             ))}
           </Card>

@@ -18,17 +18,19 @@ interface StoryRowProps {
   note?: string;
   showSave?: boolean;
   showSummary?: boolean;
+  /** Opened from the briefing → the story page shows Prev/Next. */
+  from?: 'briefing';
 }
 
 /** Compact list row for Quick Reads, Explore, search results and the briefing. */
-export function StoryRow({ story, index, note, showSave = true, showSummary = true }: StoryRowProps) {
+export function StoryRow({ story, index, note, showSave = true, showSummary = true, from }: StoryRowProps) {
   const { colors } = useTheme();
   const actions = useStoryActions(story);
 
   return (
     <View style={styles.row}>
       <Pressable
-        onPress={actions.open}
+        onPress={() => actions.open(from)}
         accessibilityRole="button"
         accessibilityLabel={`${story.canonicalHeadline}${actions.read ? ', read' : ''}`}
         style={({ pressed }) => [styles.main, { opacity: pressed ? 0.7 : 1 }]}>
