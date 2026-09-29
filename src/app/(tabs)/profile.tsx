@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, Switch, TextInput, View } from 'react-native';
 
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Card, Divider, Screen, SectionHeader } from '@/components/ui/layout';
@@ -46,7 +47,7 @@ export default function ProfileScreen() {
     <Screen>
       {/* Profile */}
       <View style={styles.profileHeader}>
-        <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.accentStrong }]}>
           <AppText style={[styles.avatarText, { color: colors.onAccent }]}>{initial}</AppText>
         </View>
         <View style={styles.flex}>
@@ -262,8 +263,10 @@ export default function ProfileScreen() {
       <Card>
         <View style={styles.list}>
           <View>
-            <AppText style={[styles.wordmark, { color: colors.accent }]}>{Brand.name}</AppText>
-            <AppText variant="caption">{Brand.tagline}</AppText>
+            <BrandLogo height={52} />
+            <AppText variant="caption" style={styles.tagline}>
+              {Brand.tagline}
+            </AppText>
           </View>
           <AppText variant="bodySm" color="textSecondary">
             Your personal newspaper and AI news analyst. Newzort groups coverage of the same event from multiple publishers,
@@ -308,7 +311,7 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
         value={value}
         onValueChange={onChange}
         accessibilityLabel={label}
-        trackColor={{ true: colors.accent, false: colors.border }}
+        trackColor={{ true: colors.accentStrong, false: colors.border }}
         thumbColor={colors.surface}
       />
     </View>
@@ -352,5 +355,5 @@ const styles = StyleSheet.create({
   cardIntro: { paddingBottom: Spacing.md },
   sourceRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, gap: Spacing.md },
   infoLine: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
-  wordmark: { fontFamily: Fonts.serif, fontSize: 20, fontWeight: '700' },
+  tagline: { marginTop: Spacing.xs },
 });

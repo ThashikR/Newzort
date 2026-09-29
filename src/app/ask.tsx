@@ -111,7 +111,7 @@ export default function AskScreen() {
           {messages.map((m) => (
             <Animated.View key={m.id} entering={FadeInUp.duration(220)}>
               {m.role === 'user' ? (
-                <View style={[styles.userBubble, { backgroundColor: colors.accent }]}>
+                <View style={[styles.userBubble, { backgroundColor: colors.accentStrong }]}>
                   <AppText variant="body" style={{ color: colors.onAccent }}>
                     {m.text}
                   </AppText>
@@ -163,7 +163,7 @@ export default function AskScreen() {
             disabled={!input.trim() || busy}
             accessibilityRole="button"
             accessibilityLabel="Send question"
-            style={[styles.send, { backgroundColor: input.trim() && !busy ? colors.accent : colors.border }]}>
+            style={[styles.send, { backgroundColor: input.trim() && !busy ? colors.accentStrong : colors.border }]}>
             <Ionicons name="arrow-up" size={18} color={colors.onAccent} />
           </Pressable>
         </View>

@@ -5,12 +5,13 @@ import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Chip } from '@/components/ui/chip';
 import { OptionCard } from '@/components/ui/option-card';
 import { Segmented } from '@/components/ui/segmented';
 import { AppText } from '@/components/ui/text';
 import { Brand } from '@/constants/brand';
-import { Fonts, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { TOPICS, topicLabel } from '@/constants/topics';
 import { BRIEFING_LENGTH_OPTIONS, PRIORITY_OPTIONS, SUMMARY_STYLE_OPTIONS } from '@/features/onboarding/options';
 import { useTheme } from '@/hooks/use-theme';
@@ -74,7 +75,7 @@ export default function OnboardingScreen() {
           <View style={styles.back} />
         </View>
         <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-          <View style={[styles.progressFill, { backgroundColor: colors.accent, width: `${((step + 1) / STEPS) * 100}%` }]} />
+          <View style={[styles.progressFill, { backgroundColor: colors.accentStrong, width: `${((step + 1) / STEPS) * 100}%` }]} />
         </View>
       </View>
 
@@ -195,7 +196,7 @@ function WelcomeStep({ name, onName }: { name: string; onName: (v: string) => vo
   return (
     <>
       <View style={styles.brandBlock}>
-        <AppText style={[styles.wordmark, { color: colors.accent }]}>{Brand.name}</AppText>
+        <BrandLogo height={72} style={styles.logo} />
         <AppText variant="caption" color="textSecondary">
           {Brand.tagline}
         </AppText>
@@ -248,8 +249,8 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, alignItems: 'center' },
   content: { width: '100%', maxWidth: MaxContentWidth, gap: Spacing.xl },
   titleBlock: { gap: Spacing.sm, marginTop: Spacing.md },
-  brandBlock: { marginTop: Spacing.lg, gap: 2 },
-  wordmark: { fontFamily: Fonts.serif, fontSize: 22, fontWeight: '700', letterSpacing: 0.5 },
+  brandBlock: { marginTop: Spacing.lg, gap: Spacing.sm, alignItems: 'flex-start' },
+  logo: { marginLeft: -4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   list: { gap: Spacing.md },
   priorityRow: {

@@ -25,8 +25,8 @@ export function Chip({ label, selected, onPress, showCheck }: ChipProps) {
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? colors.accent : colors.surface,
-          borderColor: selected ? colors.accent : colors.border,
+          backgroundColor: selected ? colors.accentStrong : colors.surface,
+          borderColor: selected ? colors.accentStrong : colors.border,
           opacity: pressed ? 0.75 : 1,
         },
       ]}>

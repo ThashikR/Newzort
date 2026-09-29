@@ -1,8 +1,12 @@
 import { Platform } from 'react-native';
 
 /**
- * Newzort's visual identity: warm paper, near-black ink, and a single
- * restrained accent ("Newzort indigo"). Colour is used for meaning, not decoration.
+ * Newzort's visual identity, taken from the logo: warm paper, navy ink
+ * (#101E36) and one bright accent, "Newzort blue" (#0076FC).
+ * Colour is used for meaning, not decoration.
+ *
+ * accent       — text & icons in blue (readable on the background)
+ * accentStrong — filled buttons/cards; always paired with white `onAccent`
  */
 export const Colors = {
   light: {
@@ -10,11 +14,13 @@ export const Colors = {
     surface: '#FFFFFF',
     surfaceMuted: '#EFECE5',
     border: '#E2DED5',
-    text: '#16181B',
-    textSecondary: '#55595F',
-    textTertiary: '#6E737A',
-    accent: '#2B4A7E',
-    accentSoft: '#E3E9F3',
+    text: '#101E36',
+    textSecondary: '#4F5866',
+    textTertiary: '#6A7280',
+    brandNavy: '#101E36',
+    accent: '#0062D6',
+    accentStrong: '#0062D6',
+    accentSoft: '#E4EEFC',
     onAccent: '#FFFFFF',
     mustKnow: '#9A2A1F',
     positive: '#2F6B45',
@@ -29,9 +35,11 @@ export const Colors = {
     text: '#EEF0F2',
     textSecondary: '#B1B6BD',
     textTertiary: '#8C929A',
-    accent: '#9DB8E6',
-    accentSoft: '#1E2A3D',
-    onAccent: '#0E1012',
+    brandNavy: '#101E36',
+    accent: '#5AA8FF',
+    accentStrong: '#1767D8',
+    accentSoft: '#14243A',
+    onAccent: '#FFFFFF',
     mustKnow: '#F08B7E',
     positive: '#7CC49A',
     warning: '#E0B45C',

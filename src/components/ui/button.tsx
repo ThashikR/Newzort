@@ -35,7 +35,7 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const { colors } = useTheme();
-  const bg = variant === 'primary' ? colors.accent : variant === 'secondary' ? colors.surfaceMuted : 'transparent';
+  const bg = variant === 'primary' ? colors.accentStrong : variant === 'secondary' ? colors.surfaceMuted : 'transparent';
   const fg = variant === 'primary' ? colors.onAccent : colors.accent;
 
   return (

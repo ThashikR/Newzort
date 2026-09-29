@@ -77,7 +77,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/briefing')}
             accessibilityRole="button"
             accessibilityLabel={`Your ${profile.briefingLength}-minute briefing, ${briefing.storyIds.length} stories. Open briefing`}
-            style={({ pressed }) => [styles.briefingStrip, { backgroundColor: colors.accent, opacity: pressed ? 0.9 : 1 }]}>
+            style={({ pressed }) => [styles.briefingStrip, { backgroundColor: colors.accentStrong, opacity: pressed ? 0.9 : 1 }]}>
             <View style={styles.flex}>
               <AppText variant="eyebrow" style={{ color: colors.onAccent, opacity: 0.8 }}>
                 Your personalized briefing
