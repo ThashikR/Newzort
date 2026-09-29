@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 /**
- * Minimal JSON client for the Vartify backend. The backend holds every
+ * Minimal JSON client for the Newzort backend. The backend holds every
  * private key (LLM, news APIs, database); the app only ever talks to it.
  */
 export async function apiFetch<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {

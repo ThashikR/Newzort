@@ -1,18 +1,19 @@
 {
   "expo": {
-    "name": "Vartify",
-    "slug": "vartify",
+    "name": "Newzort",
+    "slug": "newzort",
+    "description": "News. Sorted for you.",
     "owner": "thashik",
     "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "vartify",
+    "scheme": "newzort",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
-      "package": "com.thashikr.vartify",
+      "package": "com.thashikr.newzort",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -41,10 +42,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "503532d8-fa62-4724-b8c2-946dd942a353"
-      }
+      "router": {}
     }
   }
 }

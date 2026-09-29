@@ -9,6 +9,7 @@ import { Chip } from '@/components/ui/chip';
 import { OptionCard } from '@/components/ui/option-card';
 import { Segmented } from '@/components/ui/segmented';
 import { AppText } from '@/components/ui/text';
+import { Brand } from '@/constants/brand';
 import { Fonts, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { TOPICS, topicLabel } from '@/constants/topics';
 import { BRIEFING_LENGTH_OPTIONS, PRIORITY_OPTIONS, SUMMARY_STYLE_OPTIONS } from '@/features/onboarding/options';
@@ -193,12 +194,17 @@ function WelcomeStep({ name, onName }: { name: string; onName: (v: string) => vo
   ];
   return (
     <>
-      <AppText style={[styles.wordmark, { color: colors.accent }]}>Vartify</AppText>
+      <View style={styles.brandBlock}>
+        <AppText style={[styles.wordmark, { color: colors.accent }]}>{Brand.name}</AppText>
+        <AppText variant="caption" color="textSecondary">
+          {Brand.tagline}
+        </AppText>
+      </View>
       <AppText variant="display" accessibilityRole="header">
         Your news.{'\n'}Your interests.
       </AppText>
       <AppText variant="body" color="textSecondary">
-        Vartify reads today’s news from multiple sources, groups coverage of the same event, and gives you a short, personal
+        Newzort reads today’s news from multiple sources, groups coverage of the same event, and gives you a short, personal
         briefing on what actually matters to you.
       </AppText>
       <View style={styles.list}>
@@ -242,7 +248,8 @@ const styles = StyleSheet.create({
   scroll: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, alignItems: 'center' },
   content: { width: '100%', maxWidth: MaxContentWidth, gap: Spacing.xl },
   titleBlock: { gap: Spacing.sm, marginTop: Spacing.md },
-  wordmark: { fontFamily: Fonts.serif, fontSize: 20, fontWeight: '700', letterSpacing: 0.5, marginTop: Spacing.lg },
+  brandBlock: { marginTop: Spacing.lg, gap: 2 },
+  wordmark: { fontFamily: Fonts.serif, fontSize: 22, fontWeight: '700', letterSpacing: 0.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   list: { gap: Spacing.md },
   priorityRow: {

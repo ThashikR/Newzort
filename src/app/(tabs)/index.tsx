@@ -40,7 +40,7 @@ export default function HomeScreen() {
           <Pressable
             onPress={() => router.push('/ask')}
             accessibilityRole="button"
-            accessibilityLabel="Ask Vartify AI"
+            accessibilityLabel="Ask Newzort AI"
             style={({ pressed }) => [styles.askButton, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.7 : 1 }]}>
             <Ionicons name="sparkles-outline" size={16} color={colors.accent} />
             <AppText variant="bodySm" color="accent" style={styles.askText}>

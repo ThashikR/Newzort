@@ -101,12 +101,12 @@ export default function ExploreScreen() {
       <Pressable
         onPress={() => router.push('/ask')}
         accessibilityRole="button"
-        accessibilityLabel="Ask Vartify AI about today's news"
+        accessibilityLabel="Ask Newzort AI about today's news"
         style={({ pressed }) => [styles.askCard, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.8 : 1 }]}>
         <Ionicons name="sparkles-outline" size={22} color={colors.accent} />
         <View style={styles.flex}>
           <AppText variant="label" color="accent">
-            Ask Vartify AI
+            Ask Newzort AI
           </AppText>
           <AppText variant="bodySm" color="textSecondary">
             “Explain today’s AI news to me”

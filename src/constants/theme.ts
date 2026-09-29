@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 
 /**
- * Vartify's visual identity: warm paper, near-black ink, and a single
- * restrained accent ("Vartify indigo"). Colour is used for meaning, not decoration.
+ * Newzort's visual identity: warm paper, near-black ink, and a single
+ * restrained accent ("Newzort indigo"). Colour is used for meaning, not decoration.
  */
 export const Colors = {
   light: {

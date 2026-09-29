@@ -102,7 +102,7 @@ async function fetchFeed(feed: FeedConfig, now: number): Promise<{ articles: Ing
   try {
     const res = await fetch(feed.url, {
       signal: AbortSignal.timeout(20_000),
-      headers: { 'User-Agent': 'VartifyNewsBot/0.1 (personal news reader; links back to publishers)' },
+      headers: { 'User-Agent': 'NewzortNewsBot/0.1 (personal news reader; links back to publishers)' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const xml = parser.parse(await res.text());

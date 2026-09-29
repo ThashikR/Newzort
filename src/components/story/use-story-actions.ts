@@ -35,7 +35,7 @@ export function useStoryActions(story: StoryCluster) {
     share: () => {
       const links = story.articles.map((a) => a.url).slice(0, 3).join('\n');
       Share.share({
-        message: `${story.canonicalHeadline}\n\n${story.analysis.summary}\n\nSources:\n${links}\n\nvia Vartify`,
+        message: `${story.canonicalHeadline}\n\n${story.analysis.summary}\n\nSources:\n${links}\n\nvia Newzort`,
         title: story.canonicalHeadline,
       }).catch(() => {});
     },

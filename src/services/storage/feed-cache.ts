@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { StoryCluster } from '@/types/news';
 
-const KEY = 'vartify:feed-cache:v1';
+const KEY = 'newzort:feed-cache:v1';
 
 export interface CachedFeed {
   stories: StoryCluster[];

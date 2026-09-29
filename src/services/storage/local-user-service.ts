@@ -4,8 +4,8 @@ import type { UserFeedback, UserProfile } from '@/types/user';
 
 import type { UserService } from '../types';
 
-const PROFILE_KEY = 'vartify:profile:v1';
-const FEEDBACK_KEY = 'vartify:feedback:v1';
+const PROFILE_KEY = 'newzort:profile:v1';
+const FEEDBACK_KEY = 'newzort:feedback:v1';
 const MAX_FEEDBACK = 500;
 
 /**

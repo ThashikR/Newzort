@@ -1,5 +1,5 @@
 /**
- * Builds Vartify's news feed.
+ * Builds Newzort's news feed.
  *
  *   npm run build-feed            → writes server/public/{feed,sources,meta}.json
  *

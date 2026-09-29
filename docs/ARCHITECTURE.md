@@ -1,4 +1,4 @@
-# Vartify architecture
+# Newzort architecture
 
 ## Layers
 

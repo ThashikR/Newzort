@@ -1,5 +1,5 @@
 /**
- * Publishers Vartify reads. Each feed was checked to respond before being added.
+ * Publishers Newzort reads. Each feed was checked to respond before being added.
  * We use only headline, a short excerpt, time and link — never full articles —
  * and every story links back to the publisher.
  *

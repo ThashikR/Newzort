@@ -93,7 +93,7 @@ export interface StoryCluster {
   updatedAt: string; // latest article
   /** Editorial/AI importance, 0–100, independent of any user. */
   importanceScore: number;
-  /** Estimated reading time for the Vartify summary, in minutes. */
+  /** Estimated reading time for the Newzort summary, in minutes. */
   readMinutes: number;
   isQuickRead: boolean;
   analysis: StorySummary;

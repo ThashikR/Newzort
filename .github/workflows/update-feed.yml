@@ -1,4 +1,4 @@
-# Rebuilds Vartify's news feed and publishes it to GitHub Pages.
+# Rebuilds Newzort's news feed and publishes it to GitHub Pages.
 #
 # Runs every 30 minutes, whenever the news engine changes, or on demand
 # (Actions tab → "Update news feed" → "Run workflow").

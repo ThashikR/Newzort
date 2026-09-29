@@ -54,7 +54,7 @@ export function demoAnswer(question: string, ctx: AskContext): AssistantAnswer {
       uncertainty: [
         ...a.uncertainty.filter((x) => x.trim()),
         ...(headlineOnly
-          ? ['Some of these stories are headlines only — Vartify hasn’t analysed them with AI yet, so there’s no “why it matters” to share.']
+          ? ['Some of these stories are headlines only — Newzort hasn’t analysed them with AI yet, so there’s no “why it matters” to share.']
           : []),
       ],
     };
@@ -98,13 +98,13 @@ export function demoAnswer(question: string, ctx: AskContext): AssistantAnswer {
     const todayCounts = countBy(today);
     const busiest = Object.entries(todayCounts).sort((a, b) => b[1] - a[1])[0];
     return answer(q, {
-      intro: `Today's feed has ${today.length} stories; the previous day had ${earlier.length} in Vartify.`,
+      intro: `Today's feed has ${today.length} stories; the previous day had ${earlier.length} in Newzort.`,
       facts: [
         ...(today[0] ? [{ text: `Top story today: ${today[0].canonicalHeadline}.`, clusterId: today[0].clusterId, sourceNames: sourceNames(today[0]) }] : []),
         ...(earlier[0] ? [{ text: `Top story yesterday: ${earlier[0].canonicalHeadline}.`, clusterId: earlier[0].clusterId, sourceNames: sourceNames(earlier[0]) }] : []),
       ],
       analysis: busiest ? [`${busiest[0]} has the most coverage today (${busiest[1]} stories).`] : [],
-      uncertainty: ['This comparison only covers stories in the Vartify feed, not all news published.'],
+      uncertainty: ['This comparison only covers stories in the Newzort feed, not all news published.'],
       relatedClusterIds: [...today.slice(0, 2), ...earlier.slice(0, 1)].map((s) => s.clusterId),
     });
   }
@@ -128,11 +128,11 @@ export function demoAnswer(question: string, ctx: AskContext): AssistantAnswer {
   if (stories.length === 0) {
     return answer(q, {
       intro: topicText
-        ? `I couldn't find any ${topicText} stories in today's Vartify feed.`
+        ? `I couldn't find any ${topicText} stories in today's Newzort feed.`
         : `I couldn't find stories in today's feed that answer that.`,
       facts: [],
       analysis: [],
-      uncertainty: ['I only answer from stories in the Vartify feed, so I won’t guess beyond them.'],
+      uncertainty: ['I only answer from stories in the Newzort feed, so I won’t guess beyond them.'],
       relatedClusterIds: [],
     });
   }

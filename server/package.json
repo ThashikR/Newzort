@@ -1,8 +1,8 @@
 {
-  "name": "vartify-news-engine",
+  "name": "newzort-news-engine",
   "private": true,
   "version": "0.1.0",
-  "description": "Builds Vartify's news feed: fetch RSS -> clean -> group stories -> feed.json",
+  "description": "Builds Newzort's news feed: fetch RSS -> clean -> group stories -> feed.json",
   "type": "module",
   "scripts": {
     "build-feed": "tsx build-feed.ts",

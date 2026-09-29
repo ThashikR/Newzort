@@ -10,6 +10,7 @@ import { Segmented } from '@/components/ui/segmented';
 import { useSnackbar } from '@/components/ui/snackbar';
 import { AppText } from '@/components/ui/text';
 import { env } from '@/config/env';
+import { Brand } from '@/constants/brand';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { TOPICS, topicLabel } from '@/constants/topics';
 import { planNotifications } from '@/features/notifications/notification-planner';
@@ -58,7 +59,7 @@ export default function ProfileScreen() {
             maxLength={40}
             style={[styles.nameInput, { color: colors.text }]}
           />
-          <AppText variant="caption">Reading with Vartify since {shortDate(profile.createdAt)}</AppText>
+          <AppText variant="caption">Reading with Newzort since {shortDate(profile.createdAt)}</AppText>
         </View>
       </View>
 
@@ -195,7 +196,7 @@ export default function ProfileScreen() {
       )}
 
       {/* Sources */}
-      <SectionHeader title="Sources" subtitle="Publishers Vartify reads from" />
+      <SectionHeader title="Sources" subtitle="Publishers Newzort reads from" />
       <Card>
         <AppText variant="bodySm" color="textSecondary" style={styles.cardIntro}>
           Every summary lists the articles it was built from. Source quality is set editorially — it is not decided by AI.
@@ -248,7 +249,7 @@ export default function ProfileScreen() {
           onPress={() =>
             confirmAction(
               'Delete all data?',
-              'This removes everything Vartify has stored on this device and restarts onboarding.',
+              'This removes everything Newzort has stored on this device and restarts onboarding.',
               'Delete',
               user.startOver,
             )
@@ -260,9 +261,12 @@ export default function ProfileScreen() {
       <SectionHeader title="About" />
       <Card>
         <View style={styles.list}>
-          <AppText style={[styles.wordmark, { color: colors.accent }]}>Vartify</AppText>
+          <View>
+            <AppText style={[styles.wordmark, { color: colors.accent }]}>{Brand.name}</AppText>
+            <AppText variant="caption">{Brand.tagline}</AppText>
+          </View>
           <AppText variant="bodySm" color="textSecondary">
-            Your personal newspaper and AI news analyst. Vartify groups coverage of the same event from multiple publishers,
+            Your personal newspaper and AI news analyst. Newzort groups coverage of the same event from multiple publishers,
             summarises the facts they share, and always links back to the original reporting.
           </AppText>
           <AppText variant="caption">

@@ -12,7 +12,7 @@ import { relativeTime } from '@/utils/time';
 
 /**
  * Every article used to build the story. Tapping opens the publisher's own
- * page — Vartify never reproduces the full article.
+ * page — Newzort never reproduces the full article.
  */
 export function SourceList({ story }: { story: StoryCluster }) {
   const { colors } = useTheme();

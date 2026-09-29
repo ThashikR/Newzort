@@ -1,6 +1,8 @@
-# Vartify
+# Newzort
 
-**Your personal newspaper + AI news analyst.** Vartify groups coverage of the same event from multiple publishers, summarises the facts they share, explains why it matters to *you*, and always links back to the original reporting.
+*News. Sorted for you.*
+
+**Your personal newspaper + AI news analyst.** Newzort groups coverage of the same event from multiple publishers, summarises the facts they share, explains why it matters to *you*, and always links back to the original reporting.
 
 > **Status: live headlines (Phase 6–7).** A news engine fetches 16 publisher RSS feeds every 30 minutes (GitHub Actions), groups coverage of the same event, and publishes [`feed.json`](https://thashikr.github.io/Vartify/feed.json) on GitHub Pages. Stories are **headline-only** until AI analysis is connected (Phase 8) — the app shows publisher excerpts with attribution and never invents analysis. Built-in demo stories are still available with `EXPO_PUBLIC_USE_MOCK_DATA=true`.
 
@@ -9,7 +11,7 @@
 ```
 GitHub Actions (every 30 min) → server/build-feed.ts
    fetch RSS → clean → group same-event articles → categorise → rank
-   → feed.json on GitHub Pages ──► Vartify app downloads it (your PC can be off)
+   → feed.json on GitHub Pages ──► Newzort app downloads it (your PC can be off)
 ```
 
 Run the engine yourself:

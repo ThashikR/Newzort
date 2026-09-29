@@ -105,7 +105,7 @@ function StoryDetail({ story }: { story: StoryCluster }) {
             <View style={[styles.confidence, { borderColor: colors.border }]}>
               <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
               <AppText variant="bodySm" style={styles.flex}>
-                Vartify hasn’t analysed this story with AI yet. Below is what each publisher reports — open any source for
+                Newzort hasn’t analysed this story with AI yet. Below is what each publisher reports — open any source for
                 the full story.
               </AppText>
             </View>

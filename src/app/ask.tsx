@@ -72,7 +72,7 @@ export default function AskScreen() {
       <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? Spacing.lg : insets.top + Spacing.sm, borderColor: colors.border }]}>
         <View style={styles.flex}>
           <AppText variant="headline" accessibilityRole="header">
-            Ask Vartify AI
+            Ask Newzort AI
           </AppText>
           <AppText variant="caption">Answers use only the stories in your feed, with sources.</AppText>
         </View>
