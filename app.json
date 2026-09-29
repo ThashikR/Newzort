@@ -2,7 +2,8 @@
   "expo": {
     "name": "Vartify",
     "slug": "vartify",
-    "version": "1.0.0",
+    "owner": "thashik",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "vartify",
@@ -11,6 +12,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.thashikr.vartify",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,6 +39,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "503532d8-fa62-4724-b8c2-946dd942a353"
+      }
     }
   }
 }
