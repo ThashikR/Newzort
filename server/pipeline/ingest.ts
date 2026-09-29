@@ -57,6 +57,29 @@ export function cleanText(html: string): string {
     .trim();
 }
 
+/**
+ * Publisher promos and feed furniture that aren't part of the story.
+ * Found by scanning real feeds for phrases repeated across many excerpts.
+ */
+const BOILERPLATE: RegExp[] = [
+  /Follow our [^.]*?live blog( for (the )?latest updates)?\.?/gi, // The Guardian
+  /Get our [^.]*?(email|newsletter)[^.]*\b(podcast|app)\b\.?/gi, // The Guardian (greedy: up to the LAST podcast/app)
+  /\b[A-Z][a-z]+ live\s*[–-]\s*latest\b.*$/g, // "Business live – latest…" (The Guardian)
+  /Sign up (for|to) [^.]*?(newsletter|email|alerts)[^.]*\.?/gi,
+  /The post .{0,200}? appeared first on .*$/gi, // WordPress feeds
+  /\s*(Continue reading|Read more|Read the full story)\s*[.…]*\s*$/gi,
+  /\s*\[(…|\.\.\.|&hellip;)\]\s*$/g,
+];
+
+export function stripBoilerplate(s: string): string {
+  let out = s;
+  for (const re of BOILERPLATE) out = out.replace(re, ' ');
+  return out
+    .replace(/\s+([,.;:!?])/g, '$1') // "email , free" → "email, free"
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Cut at a sentence/word boundary so excerpts stay short (and within fair use). */
 export function shorten(s: string, max = EXCERPT_MAX): string {
   if (s.length <= max) return s;
@@ -118,7 +141,7 @@ async function fetchFeed(feed: FeedConfig, now: number): Promise<{ articles: Ing
       // Undated items are treated as "now" (feeds list newest first).
       const publishedAt = Number.isFinite(published) ? Math.min(published, now) : now;
       if (now - publishedAt > MAX_AGE_HOURS * 3_600_000) continue;
-      const excerpt = shorten(cleanText(text(item.description ?? item.summary ?? item['media:description'] ?? '')));
+      const excerpt = shorten(stripBoilerplate(cleanText(text(item.description ?? item.summary ?? item['media:description'] ?? ''))));
       articles.push({
         id: `${feed.source.id}-${hashId(url)}`,
         feed,
