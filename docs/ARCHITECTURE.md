@@ -55,7 +55,7 @@ Home sections (`sections.ts`): **Must Know** = importance ≥ 65, ranked by impo
 
 ## Feed contract (current: static files)
 
-The backend is **static files** rebuilt every 30 minutes by GitHub Actions (`.github/workflows/update-feed.yml`) and hosted on GitHub Pages at `https://thashikr.github.io/Vartify`:
+The backend is **static files** rebuilt every 30 minutes by GitHub Actions (`.github/workflows/update-feed.yml`) and hosted on GitHub Pages at `https://thashikr.github.io/Newzort`:
 
 | File | Contents |
 |---|---|

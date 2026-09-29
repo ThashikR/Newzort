@@ -11,7 +11,7 @@
  * (.github/workflows/update-feed.yml) and hosted on GitHub Pages.
  * A public URL — safe to keep in code.
  */
-const DEFAULT_FEED_URL = 'https://thashikr.github.io/Vartify';
+const DEFAULT_FEED_URL = 'https://thashikr.github.io/Newzort';
 
 const apiUrl = (process.env.EXPO_PUBLIC_API_URL || DEFAULT_FEED_URL).trim().replace(/\/+$/, '');
 
