@@ -54,6 +54,7 @@ function build(spec: ClusterSpec): StoryCluster {
   };
 
   return {
+    analysisMode: 'ai',
     clusterId: spec.id,
     canonicalHeadline: spec.headline,
     category: spec.category,

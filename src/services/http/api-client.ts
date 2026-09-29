@@ -20,7 +20,13 @@ export async function apiFetch<T>(path: string, init?: RequestInit & { timeoutMs
     const res = await fetch(`${env.apiUrl}${path}`, {
       ...init,
       signal: controller.signal,
-      headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...init?.headers },
+      // Only send Content-Type with a body: on a plain GET it would force a CORS
+      // preflight that static hosts (GitHub Pages) don't answer.
+      headers: {
+        Accept: 'application/json',
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...init?.headers,
+      },
     });
     if (!res.ok) throw new ApiError(`Request failed: ${res.status}`, res.status);
     return (await res.json()) as T;

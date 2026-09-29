@@ -39,13 +39,27 @@ function uncertaintyFor(stories: StoryCluster[]): string[] {
   return notes;
 }
 
-const answer = (question: string, a: Omit<AssistantAnswer, 'question' | 'generatedBy'>): AssistantAnswer => ({
-  question,
-  generatedBy: 'demo',
-  ...a,
-});
-
 export function demoAnswer(question: string, ctx: AskContext): AssistantAnswer {
+  // Every answer passes through here: drop empty analysis text (headline-only
+  // stories have none) and say so honestly instead of filling the gap.
+  const answer = (q: string, a: Omit<AssistantAnswer, 'question' | 'generatedBy'>): AssistantAnswer => {
+    const related = a.relatedClusterIds.map((id) => ctx.stories.find((s) => s.clusterId === id));
+    const headlineOnly = related.some((s) => s?.analysisMode === 'extractive');
+    return {
+      question: q,
+      generatedBy: 'demo',
+      ...a,
+      facts: a.facts.filter((f) => f.text.trim()),
+      analysis: a.analysis.filter((x) => x.trim()),
+      uncertainty: [
+        ...a.uncertainty.filter((x) => x.trim()),
+        ...(headlineOnly
+          ? ['Some of these stories are headlines only — Vartify hasn’t analysed them with AI yet, so there’s no “why it matters” to share.']
+          : []),
+      ],
+    };
+  };
+
   const q = question.trim();
   const focus = ctx.focusClusterId ? ctx.stories.find((s) => s.clusterId === ctx.focusClusterId) : undefined;
 

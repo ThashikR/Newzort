@@ -73,8 +73,18 @@ export interface StorySummary {
   confidence: Confidence;
 }
 
+/**
+ * How the story's text was produced:
+ * - 'ai'         — full structured analysis (summary, key points, why it matters…)
+ * - 'extractive' — no AI yet: summary is the publisher's own excerpt and
+ *                  keyPoints are the headlines each source used. Analysis
+ *                  fields (whyItMatters, background, …) are empty strings.
+ */
+export type AnalysisMode = 'ai' | 'extractive';
+
 /** Several articles about the same underlying event, synthesized into one story. */
 export interface StoryCluster {
+  analysisMode: AnalysisMode;
   clusterId: string;
   canonicalHeadline: string;
   category: TopicId;

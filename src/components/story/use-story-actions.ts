@@ -21,8 +21,8 @@ export function useStoryActions(story: StoryCluster) {
     read,
     open: () => router.push({ pathname: '/story/[id]', params: { id } }),
     toggleSave: () => {
-      toggleSave(id);
-      snackbar(saved ? 'Removed from Saved' : 'Saved for later', saved ? undefined : { label: 'Undo', onPress: () => toggleSave(id) });
+      toggleSave(story);
+      snackbar(saved ? 'Removed from Saved' : 'Saved for later', saved ? undefined : { label: 'Undo', onPress: () => toggleSave(story) });
     },
     toggleLike: () => {
       toggleLike(id);

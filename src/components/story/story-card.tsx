@@ -23,6 +23,7 @@ export function StoryCard({ story, mustKnow }: { story: StoryCluster; mustKnow?:
   const { profile } = useUser();
   const actions = useStoryActions(story);
   const a = story.analysis;
+  const isAi = story.analysisMode === 'ai';
   const points = a.keyPoints.slice(0, KEY_POINTS_BY_STYLE[profile.summaryStyle]);
 
   return (
@@ -38,33 +39,45 @@ export function StoryCard({ story, mustKnow }: { story: StoryCluster; mustKnow?:
         <Eyebrow story={story} mustKnow={mustKnow} />
 
         <AppText variant="headline">{story.canonicalHeadline}</AppText>
-        <AppText variant="body" color="textSecondary">
-          {a.summary}
-        </AppText>
-
-        <View style={styles.block}>
-          <AppText variant="eyebrow">Key points</AppText>
-          {points.map((p, i) => (
-            <View key={i} style={styles.bulletRow}>
-              <View style={[styles.bullet, { backgroundColor: colors.textTertiary }]} />
-              <AppText variant="bodySm" style={styles.flex}>
-                {p}
+        {a.summary ? (
+          <AppText variant="body" color="textSecondary" numberOfLines={isAi ? undefined : 4}>
+            {/* Headline-only stories show the publisher's own excerpt, clearly attributed. */}
+            {!isAi && (
+              <AppText variant="bodyStrong" color="textSecondary">
+                {story.sources[0]?.name}:{' '}
               </AppText>
-            </View>
-          ))}
-        </View>
-
-        <View style={[styles.why, { backgroundColor: colors.accentSoft }]}>
-          <AppText variant="eyebrow" color="accent">
-            Why it matters
+            )}
+            {a.summary}
           </AppText>
-          <AppText variant="bodySm">{a.whyItMatters}</AppText>
-          {profile.summaryStyle === 'analysis' && (
-            <AppText variant="bodySm" color="textSecondary">
-              {a.background}
+        ) : null}
+
+        {points.length > 0 && (
+          <View style={styles.block}>
+            <AppText variant="eyebrow">{isAi ? 'Key points' : 'Also reported'}</AppText>
+            {points.map((p, i) => (
+              <View key={i} style={styles.bulletRow}>
+                <View style={[styles.bullet, { backgroundColor: colors.textTertiary }]} />
+                <AppText variant="bodySm" style={styles.flex}>
+                  {p}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {isAi && a.whyItMatters ? (
+          <View style={[styles.why, { backgroundColor: colors.accentSoft }]}>
+            <AppText variant="eyebrow" color="accent">
+              Why it matters
             </AppText>
-          )}
-        </View>
+            <AppText variant="bodySm">{a.whyItMatters}</AppText>
+            {profile.summaryStyle === 'analysis' && a.background ? (
+              <AppText variant="bodySm" color="textSecondary">
+                {a.background}
+              </AppText>
+            ) : null}
+          </View>
+        ) : null}
 
         <AppText variant="caption" numberOfLines={1}>
           {sourceLine(story)}

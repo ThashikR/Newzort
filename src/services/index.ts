@@ -6,7 +6,7 @@ import { env } from '@/config/env';
 import { buildHomeSections } from '@/features/personalization/sections';
 import { rankStories } from '@/features/personalization/score';
 
-import { httpAiService, httpNewsService } from './http/http-services';
+import { httpNewsService } from './http/http-services';
 import { mockAiService } from './mock/mock-ai-service';
 import { mockNewsService } from './mock/mock-news-service';
 import { localUserService } from './storage/local-user-service';
@@ -14,7 +14,9 @@ import type { AIService, NewsService, PersonalizationService, UserService } from
 
 export const newsService: NewsService = env.useMockData ? mockNewsService : httpNewsService;
 
-export const aiService: AIService = env.useMockData ? mockAiService : httpAiService;
+// Ask AI answers from whatever stories are loaded (demo or live) without an
+// LLM until the AI backend exists (Phase 8). It never needs an API key.
+export const aiService: AIService = mockAiService;
 
 export const personalizationService: PersonalizationService = {
   rank: rankStories,

@@ -16,6 +16,7 @@ interface NewsStore {
 const NewsContext = createContext<NewsStore | null>(null);
 
 export function NewsProvider({ children }: { children: ReactNode }) {
+  const { profile } = useUser();
   const [stories, setStories] = useState<StoryCluster[]>([]);
   const [status, setStatus] = useState<NewsStore['status']>('loading');
   const [refreshing, setRefreshing] = useState(false);
@@ -57,9 +58,10 @@ export function NewsProvider({ children }: { children: ReactNode }) {
         await load();
         setRefreshing(false);
       },
-      getStory: (id) => stories.find((s) => s.clusterId === id),
+      // Today's feed first; otherwise the copy kept when the user saved it.
+      getStory: (id) => stories.find((s) => s.clusterId === id) ?? profile.saved.find((s) => s.clusterId === id)?.story,
     }),
-    [stories, status, refreshing, load],
+    [stories, status, refreshing, load, profile.saved],
   );
 
   return <NewsContext.Provider value={store}>{children}</NewsContext.Provider>;

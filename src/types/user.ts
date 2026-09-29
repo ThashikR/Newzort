@@ -1,4 +1,4 @@
-import type { TopicId } from './news';
+import type { StoryCluster, TopicId } from './news';
 
 export type InterestPriority = 'high' | 'medium' | 'low';
 
@@ -32,6 +32,11 @@ export interface NotificationPreferences {
 export interface SavedStory {
   clusterId: string;
   savedAt: string;
+  /**
+   * A copy of the story at save time. Live feeds only keep ~36 hours of news,
+   * so saved stories must not depend on still being in the feed.
+   */
+  story?: StoryCluster;
 }
 
 export interface UserProfile {

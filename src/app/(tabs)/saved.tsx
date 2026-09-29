@@ -9,6 +9,7 @@ import { AppText } from '@/components/ui/text';
 import { Spacing } from '@/constants/theme';
 import { useNews } from '@/state/news-store';
 import { useUser } from '@/state/user-store';
+import type { StoryCluster } from '@/types/news';
 import { shortDate } from '@/utils/time';
 
 export default function SavedScreen() {
@@ -20,9 +21,9 @@ export default function SavedScreen() {
     .map((s) => ({ saved: s, story: getStory(s.clusterId) }))
     .filter((x): x is { saved: typeof x.saved; story: NonNullable<typeof x.story> } => !!x.story);
 
-  const remove = (id: string) => {
-    toggleSave(id);
-    snackbar('Removed from Saved', { label: 'Undo', onPress: () => toggleSave(id) });
+  const remove = (story: StoryCluster) => {
+    toggleSave(story);
+    snackbar('Removed from Saved', { label: 'Undo', onPress: () => toggleSave(story) });
   };
 
   return (
@@ -63,7 +64,7 @@ export default function SavedScreen() {
                     </AppText>
                   </View>
                 </Pressable>
-                <Button label="Remove" variant="ghost" size="sm" onPress={() => remove(story.clusterId)} />
+                <Button label="Remove" variant="ghost" size="sm" onPress={() => remove(story)} />
               </View>
             </View>
           ))}

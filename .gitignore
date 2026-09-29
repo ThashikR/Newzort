@@ -52,3 +52,6 @@ server/.env
 # machine-specific npm cache location (F: drive on this PC)
 .npmrc
 
+# built news feed (published by GitHub Actions, not committed)
+server/public/
+

@@ -55,6 +55,7 @@ function StoryDetail({ story }: { story: StoryCluster }) {
   const { markRead } = useUser();
   const actions = useStoryActions(story);
   const a = story.analysis;
+  const isAi = story.analysisMode === 'ai';
 
   useEffect(() => {
     markRead(story.clusterId);
@@ -85,65 +86,48 @@ function StoryDetail({ story }: { story: StoryCluster }) {
           <AppText variant="display" accessibilityRole="header" style={styles.headline}>
             {story.canonicalHeadline}
           </AppText>
-          <AppText variant="body" color="textSecondary" style={styles.lede}>
-            {a.summary}
-          </AppText>
+          {a.summary ? (
+            <AppText variant="body" color="textSecondary" style={styles.lede}>
+              {!isAi && (
+                <AppText variant="bodyStrong" color="textSecondary" style={styles.lede}>
+                  {story.sources[0]?.name}:{' '}
+                </AppText>
+              )}
+              {a.summary}
+            </AppText>
+          ) : null}
           <AppText variant="caption">
             Updated {relativeTime(story.updatedAt).toLowerCase()} · Based on {story.sources.length} source
             {story.sources.length === 1 ? '' : 's'}
           </AppText>
 
-          <Section title="What happened?">
-            <AppText variant="body">{a.whatHappened}</AppText>
-          </Section>
+          {!isAi && (
+            <View style={[styles.confidence, { borderColor: colors.border }]}>
+              <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+              <AppText variant="bodySm" style={styles.flex}>
+                Vartify hasn’t analysed this story with AI yet. Below is what each publisher reports — open any source for
+                the full story.
+              </AppText>
+            </View>
+          )}
 
-          <Section title="Key points">
-            {a.keyPoints.map((p, i) => (
-              <View key={i} style={styles.pointRow}>
-                <AppText variant="bodyStrong" color="accent" style={styles.pointNum}>
-                  {i + 1}
+          {!isAi && a.keyPoints.length > 0 && (
+            <Section title="Also reported">
+              {a.keyPoints.map((p, i) => (
+                <AppText key={i} variant="body">
+                  • {p}
                 </AppText>
-                <AppText variant="body" style={styles.flex}>
-                  {p}
-                </AppText>
-              </View>
-            ))}
-          </Section>
+              ))}
+            </Section>
+          )}
 
-          <View style={[styles.why, { backgroundColor: colors.accentSoft }]}>
-            <AppText variant="eyebrow" color="accent">
-              Why it matters
-            </AppText>
-            <AppText variant="body">{a.whyItMatters}</AppText>
-          </View>
-
-          <Section title="Background">
-            <AppText variant="body">{a.background}</AppText>
-          </Section>
-
-          <Section title="What happens next?">
-            <AppText variant="body" color={a.whatHappensNext ? 'text' : 'textSecondary'}>
-              {a.whatHappensNext ?? 'The sources don’t yet say what happens next. We won’t speculate.'}
-            </AppText>
-            <AppText variant="caption" color="textTertiary">
-              Based only on what the sources report — not a prediction.
-            </AppText>
-          </Section>
-
-          <View style={[styles.confidence, { borderColor: colors.border }]}>
-            <Ionicons
-              name={a.confidence === 'high' ? 'shield-checkmark-outline' : 'alert-circle-outline'}
-              size={18}
-              color={a.confidence === 'high' ? colors.positive : colors.warning}
-            />
-            <AppText variant="bodySm" style={styles.flex}>
-              {CONFIDENCE_TEXT[a.confidence]}
-            </AppText>
-          </View>
+          {isAi && <AiAnalysis story={story} />}
 
           <Section title={`Sources (${story.articles.length})`}>
             <AppText variant="bodySm" color="textSecondary">
-              This summary was generated from the articles below. Open them to read the original reporting.
+              {isAi
+                ? 'This summary was generated from the articles below. Open them to read the original reporting.'
+                : 'Open any article to read the full story on the publisher’s site.'}
             </AppText>
             <SourceList story={story} />
           </Section>
@@ -183,6 +167,63 @@ function StoryDetail({ story }: { story: StoryCluster }) {
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+/** The structured AI sections — only for stories with analysisMode 'ai'. */
+function AiAnalysis({ story }: { story: StoryCluster }) {
+  const { colors } = useTheme();
+  const a = story.analysis;
+  return (
+    <>
+      <Section title="What happened?">
+        <AppText variant="body">{a.whatHappened}</AppText>
+      </Section>
+
+      <Section title="Key points">
+        {a.keyPoints.map((p, i) => (
+          <View key={i} style={styles.pointRow}>
+            <AppText variant="bodyStrong" color="accent" style={styles.pointNum}>
+              {i + 1}
+            </AppText>
+            <AppText variant="body" style={styles.flex}>
+              {p}
+            </AppText>
+          </View>
+        ))}
+      </Section>
+
+      <View style={[styles.why, { backgroundColor: colors.accentSoft }]}>
+        <AppText variant="eyebrow" color="accent">
+          Why it matters
+        </AppText>
+        <AppText variant="body">{a.whyItMatters}</AppText>
+      </View>
+
+      <Section title="Background">
+        <AppText variant="body">{a.background}</AppText>
+      </Section>
+
+      <Section title="What happens next?">
+        <AppText variant="body" color={a.whatHappensNext ? 'text' : 'textSecondary'}>
+          {a.whatHappensNext ?? 'The sources don’t yet say what happens next. We won’t speculate.'}
+        </AppText>
+        <AppText variant="caption" color="textTertiary">
+          Based only on what the sources report — not a prediction.
+        </AppText>
+      </Section>
+
+      <View style={[styles.confidence, { borderColor: colors.border }]}>
+        <Ionicons
+          name={a.confidence === 'high' ? 'shield-checkmark-outline' : 'alert-circle-outline'}
+          size={18}
+          color={a.confidence === 'high' ? colors.positive : colors.warning}
+        />
+        <AppText variant="bodySm" style={styles.flex}>
+          {CONFIDENCE_TEXT[a.confidence]}
+        </AppText>
+      </View>
+    </>
   );
 }
 

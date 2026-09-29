@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { userService } from '@/services';
-import type { TopicId } from '@/types/news';
+import type { StoryCluster, TopicId } from '@/types/news';
 import type {
   BriefingLength,
   FeedbackKind,
@@ -53,7 +53,7 @@ interface UserStore {
   setSummaryStyle(style: SummaryStyle): void;
   setBriefingLength(length: BriefingLength): void;
   setNotifications(patch: Partial<NotificationPreferences>): void;
-  toggleSave(clusterId: string): void;
+  toggleSave(story: StoryCluster): void;
   toggleLike(clusterId: string): void;
   setNotInterested(clusterId: string, value: boolean): void;
   markRead(clusterId: string): void;
@@ -107,13 +107,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setSummaryStyle: (summaryStyle) => update((p) => ({ ...p, summaryStyle })),
       setBriefingLength: (briefingLength) => update((p) => ({ ...p, briefingLength })),
       setNotifications: (patch) => update((p) => ({ ...p, notifications: { ...p.notifications, ...patch } })),
-      toggleSave: (id) =>
+      toggleSave: (story) =>
         update((p) => {
+          const id = story.clusterId;
           const isSaved = p.saved.some((s) => s.clusterId === id);
           if (!isSaved) feedback(id, 'save');
           return {
             ...p,
-            saved: isSaved ? p.saved.filter((s) => s.clusterId !== id) : [{ clusterId: id, savedAt: new Date().toISOString() }, ...p.saved],
+            saved: isSaved
+              ? p.saved.filter((s) => s.clusterId !== id)
+              : [{ clusterId: id, savedAt: new Date().toISOString(), story }, ...p.saved],
           };
         }),
       toggleLike: (id) =>

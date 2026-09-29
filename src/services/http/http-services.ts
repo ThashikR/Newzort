@@ -1,40 +1,35 @@
 /**
- * Backend-backed implementations. Endpoints are documented in docs/ARCHITECTURE.md.
- * Enabled by setting EXPO_PUBLIC_API_URL and EXPO_PUBLIC_USE_MOCK_DATA=false.
+ * Live-data implementations.
+ *
+ * The news backend publishes STATIC files (built on a schedule by
+ * server/build-feed.ts and hosted on GitHub Pages):
+ *   {EXPO_PUBLIC_API_URL}/feed.json     StoryCluster[]
+ *   {EXPO_PUBLIC_API_URL}/sources.json  NewsSource[]
+ * So the app downloads the feed once, then finds stories and searches locally.
  */
-import type { AssistantAnswer } from '@/types/ai';
+import { searchStories } from '@/features/search/search-stories';
 import type { NewsSource, StoryCluster } from '@/types/news';
 
-import type { AIService, NewsService, SearchResult } from '../types';
-import { ApiError, apiFetch } from './api-client';
+import type { NewsService } from '../types';
+import { apiFetch } from './api-client';
+
+let cachedFeed: StoryCluster[] | null = null;
+
+async function loadFeed(force = false): Promise<StoryCluster[]> {
+  if (!cachedFeed || force) {
+    // Cache-busting query so a pull-to-refresh never gets a stale CDN copy.
+    cachedFeed = await apiFetch<StoryCluster[]>(`/feed.json?t=${Date.now()}`);
+  }
+  return cachedFeed;
+}
 
 export const httpNewsService: NewsService = {
-  getFeed: () => apiFetch<StoryCluster[]>('/v1/feed'),
+  getFeed: () => loadFeed(true),
   async getStory(clusterId) {
-    try {
-      return await apiFetch<StoryCluster>(`/v1/stories/${encodeURIComponent(clusterId)}`);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 404) return null;
-      throw e;
-    }
+    return (await loadFeed()).find((s) => s.clusterId === clusterId) ?? null;
   },
-  search: (query, scope) =>
-    apiFetch<SearchResult[]>(`/v1/search?q=${encodeURIComponent(query)}&scope=${encodeURIComponent(scope)}`),
-  listSources: () => apiFetch<NewsSource[]>('/v1/sources'),
-};
-
-export const httpAiService: AIService = {
-  ask: (question, context) =>
-    apiFetch<AssistantAnswer>('/v1/assistant/ask', {
-      method: 'POST',
-      // Only IDs are sent; the backend re-reads stories from its own store,
-      // so answers are grounded in server-side source data.
-      body: JSON.stringify({
-        question,
-        focusClusterId: context.focusClusterId,
-        storyIds: context.stories.map((s) => s.clusterId),
-        interests: context.interests,
-      }),
-      timeoutMs: 30_000,
-    }),
+  async search(query, scope) {
+    return searchStories(await loadFeed(), query, scope);
+  },
+  listSources: () => apiFetch<NewsSource[]>('/sources.json'),
 };
