@@ -6,12 +6,18 @@
  * must live on the backend — see `server/.env.example`.
  */
 
-const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? '').trim().replace(/\/+$/, '');
-const forceMock = (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'true').toLowerCase() === 'true';
+/**
+ * The live news feed, rebuilt every 30 minutes by GitHub Actions
+ * (.github/workflows/update-feed.yml) and hosted on GitHub Pages.
+ * A public URL — safe to keep in code.
+ */
+const DEFAULT_FEED_URL = 'https://thashikr.github.io/Vartify';
+
+const apiUrl = (process.env.EXPO_PUBLIC_API_URL || DEFAULT_FEED_URL).trim().replace(/\/+$/, '');
 
 export const env = {
   apiUrl,
-  /** Demo data is used when forced, or when no backend URL is configured. */
-  useMockData: forceMock || apiUrl.length === 0,
-  appVersion: '0.1.0',
+  /** Set EXPO_PUBLIC_USE_MOCK_DATA=true to use the built-in demo stories instead. */
+  useMockData: (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'false').toLowerCase() === 'true',
+  appVersion: '0.2.0',
 } as const;

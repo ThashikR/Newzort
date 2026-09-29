@@ -53,14 +53,28 @@ relevance = 0.35 · interest match      (priority: high 1.0, medium 0.65, low 0.
 It's exposed through `PersonalizationService`, so a learned model can replace it without UI changes.
 Home sections (`sections.ts`): **Must Know** = importance ≥ 65, ranked by importance + relevance + source quality; **For You** = interest matches; **Quick Read** = short items; **Explore** = everything else.
 
-## API contract (for the backend)
+## Feed contract (current: static files)
+
+The backend is **static files** rebuilt every 30 minutes by GitHub Actions (`.github/workflows/update-feed.yml`) and hosted on GitHub Pages at `https://thashikr.github.io/Vartify`:
+
+| File | Contents |
+|---|---|
+| `feed.json` | `StoryCluster[]` (up to 150, newest ~36 h) |
+| `sources.json` | `NewsSource[]` |
+| `meta.json` | build time, counts, per-feed status (for debugging) |
+
+The app downloads `feed.json` once and does story lookup, search, ranking and briefing **on the device** (`src/services/http/http-services.ts`).
+
+**Analysis modes.** Each story has `analysisMode`:
+- `extractive` (now): the summary is the lead publisher's own excerpt (credited to them), and `keyPoints` lists what the other publishers' headlines say. The analysis fields are empty, and the UI hides them.
+- `ai` (Phase 8): the full structured analysis, validated by `server/pipeline/validate-analysis.ts`.
+
+**Saved stories** keep a copy of the story, so they survive after dropping out of the 36-hour feed.
+
+### Future API (when a server with an LLM exists)
 
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/v1/feed` | `StoryCluster[]` |
-| GET | `/v1/stories/:id` | `StoryCluster` (404 if missing) |
-| GET | `/v1/search?q=&scope=` | `SearchResult[]` |
-| GET | `/v1/sources` | `NewsSource[]` |
 | POST | `/v1/assistant/ask` | `AssistantAnswer`; body `{ question, focusClusterId?, storyIds, interests }` |
 
 The assistant receives story **ids**, not text, and re-reads stories server-side, so answers stay grounded in stored source data.
@@ -78,5 +92,5 @@ The assistant receives story **ids**, not text, and re-reads stories server-side
 ## Roadmap
 
 1. ✅ UI with demo data   2. ✅ Navigation and state   3. ✅ Onboarding and personalization
-4. ✅ Story detail and sources   5. ✅ Service abstraction   6. Backend integration
-7. Real news sources   8. LLM analysis   9. Auth and database   10. Tests, performance, production build
+4. ✅ Story detail and sources   5. ✅ Service abstraction   6. ✅ Backend (static feed on GitHub Pages)
+7. ✅ Real news sources (16 RSS feeds)   8. LLM analysis   9. Auth and database   10. Tests, performance, production build
