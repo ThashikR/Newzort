@@ -1,0 +1,64 @@
+# Rebuilds Vartify's news feed and publishes it to GitHub Pages.
+#
+# Runs every 30 minutes, whenever the news engine changes, or on demand
+# (Actions tab → "Update news feed" → "Run workflow").
+# The app reads:  https://<username>.github.io/<repo>/feed.json
+
+name: Update news feed
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes (UTC); GitHub may delay a few minutes
+  push:
+    branches: [main, master]
+    paths: ['server/**', '.github/workflows/update-feed.yml']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two publishes at once; a newer run replaces an older queued one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install news engine dependencies
+        run: npm ci
+
+      - name: Build the feed (fetch → group → feed.json)
+        run: npm run build-feed
+
+      - name: Prepare GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the feed
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: server/public
+
+      - name: Publish to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
