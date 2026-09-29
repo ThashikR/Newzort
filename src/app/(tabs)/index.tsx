@@ -7,6 +7,7 @@ import { StoryRow } from '@/components/story/story-row';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { DemoNotice } from '@/components/ui/demo-notice';
+import { FeedStatus } from '@/components/ui/feed-status';
 import { Card, Divider, EmptyState, Screen, SectionHeader } from '@/components/ui/layout';
 import { AppText } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
@@ -21,7 +22,7 @@ import { greeting, longDate } from '@/utils/time';
 export default function HomeScreen() {
   const { colors } = useTheme();
   const { profile } = useUser();
-  const { status, refreshing, refresh, stories } = useNews();
+  const { status, refreshing, refresh, stories, lastUpdated, offline } = useNews();
   const { sections } = usePersonalizedFeed();
   const briefing = buildBriefing(sections, profile);
 
@@ -54,6 +55,7 @@ export default function HomeScreen() {
         <AppText variant="body" color="textSecondary">
           Here’s what matters to you today.
         </AppText>
+        <FeedStatus lastUpdated={lastUpdated} offline={offline} onRetry={refresh} />
       </View>
 
       {status === 'loading' && <ActivityIndicator style={styles.loading} color={colors.textSecondary} />}
