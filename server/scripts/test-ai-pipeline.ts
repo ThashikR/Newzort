@@ -61,7 +61,15 @@ const previous = [{ ...story('s5', 2), analysisMode: 'ai' as const, canonicalHea
 let calls = 0;
 globalThis.fetch = (async (url: string) => {
   calls++;
-  if (String(url).includes('gemini-2.5-flash:')) return new Response('quota', { status: 429 }); // first model rate-limited → fallback
+  // Model discovery: a realistic list with models we must NOT pick.
+  if (String(url).includes('/v1beta/models?')) {
+    const m = (name: string) => ({ name: `models/${name}`, supportedGenerationMethods: ['generateContent'] });
+    return new Response(
+      JSON.stringify({ models: [m('gemini-2.5-pro'), m('gemini-3.8-flash'), m('gemini-3.8-flash-preview-tts'), m('gemini-3.5-flash-lite'), m('gemini-3.1-flash')] }),
+      { status: 200 },
+    );
+  }
+  if (String(url).includes('gemini-3.8-flash:')) return new Response('quota', { status: 429 }); // first model rate-limited → fallback
   const body = { stories: stories.filter((s) => s.clusterId !== 's3').map(good) }; // s3 missing → rejected
   return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(body) }] } }] }), { status: 200 });
 }) as typeof fetch;
@@ -71,6 +79,7 @@ const { stories: out, report } = await analyseWithAi(stories, previous);
 
 const byId = Object.fromEntries(out.map((s) => [s.clusterId, s]));
 const checks: [string, boolean][] = [
+  ['discovery picks newest Flash + Flash-Lite', report.models.join() === 'gemini:gemini-3.8-flash,gemini:gemini-3.5-flash-lite'],
   ['s5 reused from previous feed', report.reused === 1 && byId.s5.canonicalHeadline === 'Cached s5'],
   ['s1 analysed with AI', byId.s1.analysisMode === 'ai' && byId.s1.canonicalHeadline === 'AI headline for s1'],
   ['uncited "Made-up point" dropped', byId.s1.analysis.keyPoints.length === 3 && !byId.s1.analysis.keyPoints.includes('Made-up point')],

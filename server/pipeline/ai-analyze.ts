@@ -23,6 +23,8 @@ export interface AiReport {
   attempted: number;
   analysed: number;
   rejected: number;
+  /** Models chosen for this run (after discovery). */
+  models: string[];
   providerCalls: Record<string, number>;
   errors: string[];
 }
@@ -127,19 +129,76 @@ function groqProvider(apiKey: string, model: string): Provider {
   };
 }
 
-function configuredProviders(): Provider[] {
-  const list = (v: string | undefined, fallback: string) => (v || fallback).split(',').map((s) => s.trim()).filter(Boolean);
+// Providers rename/retire models every few months, so we ASK which models exist
+// right now and pick the best match, instead of hard-coding names.
+// GEMINI_MODELS / GROQ_MODELS (comma-separated) override the discovery.
+
+const versionOf = (name: string) => Number(name.match(/gemini-(\d+(?:\.\d+)?)/)?.[1] ?? 0);
+
+async function discoverGeminiModels(apiKey: string): Promise<string[]> {
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {
+    signal: AbortSignal.timeout(20_000),
+    headers: { 'x-goog-api-key': apiKey },
+  });
+  if (!res.ok) throw new Error(`Gemini model list HTTP ${res.status}`);
+  const data = (await res.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
+  const names = (data.models ?? [])
+    .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
+    .map((m) => m.name.replace(/^models\//, ''))
+    // Stable text Flash models only (skip preview/experimental/image/audio/TTS variants).
+    .filter((n) => /^gemini-\d+(\.\d+)?-flash(-lite)?$/.test(n));
+  // Newest version first; within a version, Flash before Flash-Lite.
+  names.sort((a, b) => versionOf(b) - versionOf(a) || Number(a.endsWith('-lite')) - Number(b.endsWith('-lite')));
+  const flash = names.find((n) => !n.endsWith('-lite'));
+  const lite = names.find((n) => n.endsWith('-lite'));
+  return [flash, lite].filter((n): n is string => !!n);
+}
+
+const GROQ_PREFERENCE = [/gpt-oss-120b/, /llama.*70b/, /qwen.*32b/, /gpt-oss-20b/, /llama-4/, /llama.*8b/];
+
+async function discoverGroqModels(apiKey: string): Promise<string[]> {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    signal: AbortSignal.timeout(20_000),
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`Groq model list HTTP ${res.status}`);
+  const data = (await res.json()) as { data?: { id: string; active?: boolean }[] };
+  const ids = (data.data ?? [])
+    .filter((m) => m.active !== false)
+    .map((m) => m.id)
+    .filter((id) => !/whisper|tts|guard|vision|audio|embed/i.test(id));
+  const picked: string[] = [];
+  for (const pattern of GROQ_PREFERENCE) {
+    const hit = ids.find((id) => pattern.test(id) && !picked.includes(id));
+    if (hit) picked.push(hit);
+    if (picked.length === 2) break;
+  }
+  return picked;
+}
+
+async function configuredProviders(report: AiReport): Promise<Provider[]> {
+  const override = (v: string | undefined) => (v ? v.split(',').map((s) => s.trim()).filter(Boolean) : null);
   const providers: Provider[] = [];
-  if (process.env.GEMINI_API_KEY) {
-    for (const m of list(process.env.GEMINI_MODELS, 'gemini-2.5-flash,gemini-2.5-flash-lite')) {
-      providers.push(geminiProvider(process.env.GEMINI_API_KEY, m));
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      const models = override(process.env.GEMINI_MODELS) ?? (await discoverGeminiModels(geminiKey));
+      models.forEach((m) => providers.push(geminiProvider(geminiKey, m)));
+    } catch (e) {
+      report.errors.push(`gemini discovery: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  if (process.env.GROQ_API_KEY) {
-    for (const m of list(process.env.GROQ_MODELS, 'llama-3.3-70b-versatile')) {
-      providers.push(groqProvider(process.env.GROQ_API_KEY, m));
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const models = override(process.env.GROQ_MODELS) ?? (await discoverGroqModels(groqKey));
+      models.forEach((m) => providers.push(groqProvider(groqKey, m)));
+    } catch (e) {
+      report.errors.push(`groq discovery: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
+  report.models = providers.map((p) => p.name);
   return providers;
 }
 
@@ -155,8 +214,9 @@ function parseStories(text: string): unknown[] {
 }
 
 export async function analyseWithAi(stories: StoryCluster[], previous: StoryCluster[]): Promise<{ stories: StoryCluster[]; report: AiReport }> {
-  const providers = configuredProviders();
-  const report: AiReport = { enabled: providers.length > 0, reused: 0, attempted: 0, analysed: 0, rejected: 0, providerCalls: {}, errors: [] };
+  const report: AiReport = { enabled: false, reused: 0, attempted: 0, analysed: 0, rejected: 0, models: [], providerCalls: {}, errors: [] };
+  const providers = await configuredProviders(report);
+  report.enabled = providers.length > 0;
 
   // 1. Reuse earlier AI results for unchanged stories.
   const prevByKey = new Map(previous.filter((p) => p.analysisMode === 'ai').map((p) => [articleKey(p), p]));
