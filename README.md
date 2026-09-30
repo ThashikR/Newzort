@@ -70,7 +70,7 @@ Most changes are JavaScript (screens, text, logic, styles) and can be sent to
 every installed APK over the internet:
 
 ```bash
-npx eas-cli@latest update --channel preview --message "What changed"
+npx eas-cli@latest update --channel preview --environment preview --message "What changed"
 ```
 
 Installed apps download it in the background and show **"A new version is ready · Restart"**.
