@@ -45,6 +45,7 @@ STRICT RULES
 - "background": 1–2 sentences of widely known, uncontroversial context. If unsure, use "".
 - "whatHappensNext": only if the sources describe next steps; otherwise null. Never speculate.
 - No sensational language, no clickbait. Plain English a busy reader understands.
+- Pick topics by what the story is about: a hack, breach or security flaw is "cybersecurity"; AI models or AI policy is "ai".
 - confidence: "high" if sources agree on the core facts, "medium" if details differ or coverage is thin, "low" if unclear.
 - importance: 0–100 for a general audience (major national/world impact ≈ 80+, routine ≈ 30–50).
 
@@ -52,7 +53,7 @@ Return ONLY JSON: {"stories": [ ... one object per input story ... ]}
 Each object:
 {
   "clusterId": string,
-  "headline": string (clear, neutral, ≤ 14 words),
+  "headline": string (clear, neutral, ≤ 14 words, sentence case — capitalise only the first word and proper nouns),
   "summary": string (1–2 sentences),
   "whatHappened": string (2–4 simple sentences),
   "keyPoints": string[] (3–6 short points),
