@@ -15,6 +15,11 @@ import type { StoryCluster } from '../../src/types/news';
 import { validateAnalysis } from './validate-analysis';
 
 const MAX_NEW_PER_RUN = Number(process.env.AI_MAX_STORIES_PER_RUN ?? 16);
+/**
+ * Bump whenever SYSTEM_PROMPT changes meaningfully: cached analyses from an
+ * older prompt are then redone (still at most MAX_NEW_PER_RUN per run).
+ */
+export const PROMPT_VERSION = 2;
 const BATCH_SIZE = 4;
 
 export interface AiReport {
@@ -220,19 +225,39 @@ export async function analyseWithAi(stories: StoryCluster[], previous: StoryClus
   report.enabled = providers.length > 0;
 
   // 1. Reuse earlier AI results for unchanged stories.
-  const prevByKey = new Map(previous.filter((p) => p.analysisMode === 'ai').map((p) => [articleKey(p), p]));
+  const prevByKey = new Map(
+    previous.filter((p) => p.analysisMode === 'ai' && p.analysisVersion === PROMPT_VERSION).map((p) => [articleKey(p), p]),
+  );
+  // Older-prompt analyses: keep showing them until re-analysed, but queue them for a redo.
+  const stale = new Map(
+    previous.filter((p) => p.analysisMode === 'ai' && p.analysisVersion !== PROMPT_VERSION).map((p) => [articleKey(p), p]),
+  );
+  const redo = new Set<string>();
   const out = stories.map((s) => {
     const prev = prevByKey.get(articleKey(s));
-    if (!prev) return s;
-    report.reused++;
-    return { ...s, analysisMode: 'ai' as const, analysis: prev.analysis, canonicalHeadline: prev.canonicalHeadline, importanceScore: prev.importanceScore, category: prev.category };
+    if (prev) {
+      report.reused++;
+      return { ...s, analysisMode: 'ai' as const, analysisVersion: prev.analysisVersion, analysis: prev.analysis, canonicalHeadline: prev.canonicalHeadline, importanceScore: prev.importanceScore, category: prev.category };
+    }
+    const old = stale.get(articleKey(s));
+    if (old) {
+      redo.add(s.clusterId);
+      return { ...s, analysisMode: 'ai' as const, analysisVersion: old.analysisVersion, analysis: old.analysis, canonicalHeadline: old.canonicalHeadline, importanceScore: old.importanceScore, category: old.category };
+    }
+    return s;
   });
   if (!report.enabled) return { stories: out, report };
 
   // 2. Pick the most important stories still without analysis.
+  // New stories first, then redos of older-prompt analyses.
   const todo = out
-    .filter((s) => s.analysisMode !== 'ai')
-    .sort((a, b) => b.sources.length - a.sources.length || b.importanceScore - a.importanceScore)
+    .filter((s) => s.analysisMode !== 'ai' || redo.has(s.clusterId))
+    .sort(
+      (a, b) =>
+        Number(redo.has(a.clusterId)) - Number(redo.has(b.clusterId)) ||
+        b.sources.length - a.sources.length ||
+        b.importanceScore - a.importanceScore,
+    )
     .slice(0, MAX_NEW_PER_RUN);
   report.attempted = todo.length;
 
@@ -270,6 +295,7 @@ export async function analyseWithAi(stories: StoryCluster[], previous: StoryClus
       out[idx] = {
         ...story,
         analysisMode: 'ai',
+        analysisVersion: PROMPT_VERSION,
         canonicalHeadline: check.summary.headline,
         // Keep our category unless the AI's first topic is more specific than a region.
         category: topics[0] && !['world', 'india'].includes(topics[0]) ? topics[0] : story.category,

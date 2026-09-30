@@ -5,7 +5,7 @@
  *   npx tsx scripts/test-ai-pipeline.ts
  */
 import type { StoryCluster } from '../../src/types/news';
-import { analyseWithAi } from '../pipeline/ai-analyze';
+import { analyseWithAi, PROMPT_VERSION } from '../pipeline/ai-analyze';
 
 function story(id: string, n: number): StoryCluster {
   const articles = Array.from({ length: n }, (_, i) => ({
@@ -55,8 +55,11 @@ const good = (s: StoryCluster) => ({
   importance: 90,
 });
 
-const stories = ['s1', 's2', 's3', 's4', 's5'].map((id) => story(id, 2));
-const previous = [{ ...story('s5', 2), analysisMode: 'ai' as const, canonicalHeadline: 'Cached s5' }];
+const stories = ['s1', 's2', 's3', 's4', 's5', 's6'].map((id) => story(id, 2));
+const previous = [
+  { ...story('s5', 2), analysisMode: 'ai' as const, analysisVersion: PROMPT_VERSION, canonicalHeadline: 'Cached s5' },
+  { ...story('s6', 2), analysisMode: 'ai' as const, analysisVersion: 1, canonicalHeadline: 'Old Prompt Headline' }, // must be redone
+];
 
 let calls = 0;
 globalThis.fetch = (async (url: string) => {
@@ -88,6 +91,8 @@ const checks: [string, boolean][] = [
   ['s3 (no answer) stays headline-only', byId.s3.analysisMode === 'extractive' && report.rejected === 1],
   ['fell back from rate-limited model', report.errors.some((e) => e.includes('rate limited')) && calls >= 2],
   ['importance blended', byId.s1.importanceScore === 70],
+  ['old-prompt analysis redone', byId.s6.canonicalHeadline === 'AI headline for s6' && byId.s6.analysisVersion === PROMPT_VERSION],
+  ['new analyses tagged with prompt version', byId.s1.analysisVersion === PROMPT_VERSION],
 ];
 checks.forEach(([name, ok]) => console.log(`${ok ? '✓' : '✗'} ${name}`));
 console.log('report:', JSON.stringify({ ...report, errors: report.errors.length }));

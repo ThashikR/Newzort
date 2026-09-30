@@ -85,6 +85,8 @@ export type AnalysisMode = 'ai' | 'extractive';
 /** Several articles about the same underlying event, synthesized into one story. */
 export interface StoryCluster {
   analysisMode: AnalysisMode;
+  /** Which version of the AI prompt produced `analysis` (server re-analyses when it changes). */
+  analysisVersion?: number;
   clusterId: string;
   canonicalHeadline: string;
   category: TopicId;
