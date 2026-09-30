@@ -4,6 +4,7 @@ import { Share } from 'react-native';
 import { useSnackbar } from '@/components/ui/snackbar';
 import { useUser } from '@/state/user-store';
 import type { StoryCluster } from '@/types/news';
+import { isSafeWebUrl } from '@/utils/safe-url';
 
 /** Save / like / hide / share for one story, with user feedback built in. */
 export function useStoryActions(story: StoryCluster) {
@@ -34,7 +35,11 @@ export function useStoryActions(story: StoryCluster) {
       snackbar('Hidden. You’ll see fewer stories like this.', { label: 'Undo', onPress: () => setNotInterested(id, false) });
     },
     share: () => {
-      const links = story.articles.map((a) => a.url).slice(0, 3).join('\n');
+      const links = story.articles
+        .map((a) => a.url)
+        .filter(isSafeWebUrl)
+        .slice(0, 3)
+        .join('\n');
       Share.share({
         message: `${story.canonicalHeadline}\n\n${story.analysis.summary}\n\nSources:\n${links}\n\nvia Newzort`,
         title: story.canonicalHeadline,

@@ -55,3 +55,7 @@ server/.env
 # built news feed (published by GitHub Actions, not committed)
 server/public/
 
+# Cloudflare Worker local secrets
+worker/.dev.vars
+worker/.wrangler/
+

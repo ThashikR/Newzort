@@ -8,6 +8,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { userService } from '@/services';
 import type { StoryCluster } from '@/types/news';
+import { isSafeWebUrl } from '@/utils/safe-url';
 import { relativeTime } from '@/utils/time';
 
 /**
@@ -19,6 +20,7 @@ export function SourceList({ story }: { story: StoryCluster }) {
   const sourceById = new Map(story.sources.map((s) => [s.id, s]));
 
   const open = (url: string) => {
+    if (!isSafeWebUrl(url)) return; // never open non-web links from feed data
     userService.recordFeedback({ clusterId: story.clusterId, kind: 'open_source', at: new Date().toISOString() });
     WebBrowser.openBrowserAsync(url).catch(() => {});
   };
