@@ -6,6 +6,7 @@ import { env } from '@/config/env';
 import { buildHomeSections } from '@/features/personalization/sections';
 import { rankStories } from '@/features/personalization/score';
 
+import { remoteAiService } from './http/ask-service';
 import { httpNewsService } from './http/http-services';
 import { mockAiService } from './mock/mock-ai-service';
 import { mockNewsService } from './mock/mock-news-service';
@@ -14,9 +15,11 @@ import type { AIService, NewsService, PersonalizationService, UserService } from
 
 export const newsService: NewsService = env.useMockData ? mockNewsService : httpNewsService;
 
-// Ask AI answers from whatever stories are loaded (demo or live) without an
-// LLM until the AI backend exists (Phase 8). It never needs an API key.
-export const aiService: AIService = mockAiService;
+// Live news → real Ask AI (Cloudflare Worker, falls back to the demo engine).
+// Demo stories → the on-device demo assistant, which knows the demo data.
+export const aiService: AIService = env.useMockData ? mockAiService : remoteAiService;
+
+export { AskLimitError } from './http/ask-service';
 
 export const personalizationService: PersonalizationService = {
   rank: rankStories,

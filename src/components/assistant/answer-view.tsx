@@ -79,11 +79,11 @@ export function AnswerView({ answer }: { answer: AssistantAnswer }) {
         </View>
       )}
 
-      {answer.generatedBy === 'demo' && (
-        <AppText variant="caption" color="textTertiary">
-          Demo assistant: assembled from stories in your feed. No AI model is connected yet.
-        </AppText>
-      )}
+      <AppText variant="caption" color="textTertiary">
+        {answer.generatedBy === 'llm'
+          ? 'Answered by AI using only today’s Newzort stories. AI can make mistakes — tap a fact to check its sources.'
+          : 'Quick answer assembled directly from your stories (AI unavailable right now).'}
+      </AppText>
     </View>
   );
 }

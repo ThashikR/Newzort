@@ -1,0 +1,21 @@
+# Newzort Ask AI — Cloudflare Worker
+# Deploy:   cd worker && npx wrangler deploy
+# Secrets (typed in YOUR terminal, never committed):
+#   npx wrangler secret put GEMINI_API_KEY
+#   npx wrangler secret put GROQ_API_KEY      (optional fallback)
+
+name = "newzort-ask"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+FEED_URL = "https://thashikr.github.io/Newzort/feed.json"
+
+# Abuse protection: at most 6 questions per minute per device/IP.
+[[ratelimits]]
+name = "ASK_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 6
+  period = 60

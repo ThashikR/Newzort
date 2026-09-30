@@ -10,7 +10,7 @@ import { Chip } from '@/components/ui/chip';
 import { AppText } from '@/components/ui/text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { aiService } from '@/services';
+import { aiService, AskLimitError } from '@/services';
 import { useNews } from '@/state/news-store';
 import { useUser } from '@/state/user-store';
 import type { AssistantMessage } from '@/types/ai';
@@ -55,8 +55,10 @@ export default function AskScreen() {
         interests: profile.interests,
       });
       setMessages((m) => [...m, { id: `a${Date.now()}`, role: 'assistant', answer }]);
-    } catch {
-      setMessages((m) => [...m, { id: `e${Date.now()}`, role: 'assistant', text: 'Sorry — I couldn’t answer that right now. Please try again.' }]);
+    } catch (e) {
+      const text =
+        e instanceof AskLimitError ? e.message : 'Sorry — I couldn’t answer that right now. Please try again.';
+      setMessages((m) => [...m, { id: `e${Date.now()}`, role: 'assistant', text }]);
     } finally {
       setBusy(false);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
