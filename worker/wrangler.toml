@@ -11,11 +11,12 @@ compatibility_date = "2026-09-01"
 [vars]
 FEED_URL = "https://thashikr.github.io/Newzort/feed.json"
 
-# Abuse protection: at most 6 questions per minute per device/IP.
-[[ratelimits]]
-name = "ASK_LIMITER"
-namespace_id = "1001"
+# Abuse protection: one Durable Object per IP counts questions exactly
+# (6/minute, 60/day — see AskRateLimiter in src/index.ts).
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "AskRateLimiter"
 
-  [ratelimits.simple]
-  limit = 6
-  period = 60
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AskRateLimiter"]

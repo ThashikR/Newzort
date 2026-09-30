@@ -11,15 +11,16 @@
 import type { AssistantAnswer, AssistantFact } from '../../src/types/ai';
 import type { StoryCluster } from '../../src/types/news';
 
-interface RateLimit {
-  limit(options: { key: string }): Promise<{ success: boolean }>;
+interface DurableObjectNamespaceLike {
+  idFromName(name: string): unknown;
+  get(id: unknown): { fetch(input: string): Promise<Response> };
 }
 
 interface Env {
   FEED_URL: string;
   GEMINI_API_KEY?: string;
   GROQ_API_KEY?: string;
-  ASK_LIMITER?: RateLimit;
+  RATE_LIMITER?: DurableObjectNamespaceLike;
 }
 
 const MAX_QUESTION = 300;
@@ -127,7 +128,9 @@ const SYSTEM_PROMPT = `You are Newzort's news assistant. Answer the reader's que
 RULES
 - Never use outside knowledge for facts. If the stories don't answer the question, say so in "intro" and leave "facts" empty.
 - Every fact must cite the id of the story it comes from ("clusterId"), exactly as given in [brackets].
+- "facts" are ONLY things the sources report (summary, key points, headlines, excerpts). Lines marked "(analysis)" are interpretation: they may inform "analysis" but must NEVER appear in "facts".
 - "analysis": short interpretation (why it matters, connections between stories). Never state new facts there.
+- Do not put story ids or [brackets] inside any text — use the "clusterId" field only.
 - "uncertainty": what is unclear, disputed, single-source or not yet known. Never speculate.
 - Be concise and neutral. 2–5 facts, 1–3 analysis points, 0–3 uncertainty points.
 - If the question is not about the news (e.g. coding, personal advice), politely say you only answer about today's stories.
@@ -217,7 +220,15 @@ async function askModel(env: Env, user: string): Promise<{ text: string; errors:
 
 // ── Answer validation ─────────────────────────────────────────────────────────
 
-const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+/** Trim, cap length, and remove any "[c-abc123]" story ids the model leaked into text. */
+const str = (v: unknown, max: number) =>
+  typeof v === 'string'
+    ? v
+        .replace(/\s*\[(?:c-[a-z0-9]+(?:,\s*)?)+\]/gi, '')
+        .replace(/\s+([.,;:])/g, '$1')
+        .trim()
+        .slice(0, max)
+    : '';
 const strList = (v: unknown, max: number, n: number) =>
   Array.isArray(v) ? v.map((x) => str(x, max)).filter(Boolean).slice(0, n) : [];
 
@@ -249,6 +260,41 @@ function toAnswer(question: string, raw: string, context: StoryCluster[]): Assis
   };
 }
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Worker copies (isolates) don't share memory, so a counter in a normal
+// variable is per-copy. A Durable Object is ONE authoritative instance per
+// key (here: per IP), so the limit is exact everywhere.
+
+const PER_MINUTE = 6;
+const PER_DAY = 60;
+
+export class AskRateLimiter {
+  private minute: number[] = [];
+  private day: number[] = [];
+
+  async fetch(): Promise<Response> {
+    const now = Date.now();
+    this.minute = this.minute.filter((t) => now - t < 60_000);
+    this.day = this.day.filter((t) => now - t < 86_400_000);
+    if (this.minute.length >= PER_MINUTE || this.day.length >= PER_DAY) {
+      return new Response('limited', { status: 429 });
+    }
+    this.minute.push(now);
+    this.day.push(now);
+    return new Response('ok');
+  }
+}
+
+async function allowed(env: Env, ip: string): Promise<boolean> {
+  if (!env.RATE_LIMITER) return true;
+  try {
+    const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName(ip));
+    return (await stub.fetch('https://limiter/check')).status !== 429;
+  } catch {
+    return true; // never block real users because the limiter itself failed
+  }
+}
+
 // ── HTTP ──────────────────────────────────────────────────────────────────────
 
 export default {
@@ -261,7 +307,7 @@ export default {
     if (request.method !== 'POST' || url.pathname !== '/ask') return json({ error: 'Not found' }, 404);
 
     const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-    if (env.ASK_LIMITER && !(await env.ASK_LIMITER.limit({ key: ip })).success) {
+    if (!(await allowed(env, ip))) {
       return json({ error: 'Too many questions — please wait a minute.' }, 429);
     }
 
