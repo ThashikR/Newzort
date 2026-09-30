@@ -4,7 +4,7 @@
  * key point must cite at least one article from the cluster. Anything else is
  * rejected or trimmed — the app never receives free-form model text.
  */
-import type { Confidence, StorySummary, TopicId } from '../../src/types/news';
+import type { Confidence, EntityType, StorySummary, TopicId } from '../../src/types/news';
 
 import type { LlmClusterAnalysis } from './types';
 
@@ -13,6 +13,7 @@ const TOPIC_IDS: TopicId[] = [
   'space', 'environment', 'health', 'education', 'finance', 'startups', 'geopolitics', 'sports', 'entertainment',
 ];
 const CONFIDENCE: Confidence[] = ['high', 'medium', 'low'];
+const ENTITY_TYPES: EntityType[] = ['person', 'organization', 'company', 'country', 'place'];
 
 export type ValidationResult =
   | { ok: true; summary: StorySummary; importance: number; droppedKeyPoints: number }
@@ -25,9 +26,11 @@ export function validateAnalysis(raw: unknown, clusterArticleIds: string[]): Val
   const a = raw as Partial<LlmClusterAnalysis>;
   if (!a || typeof a !== 'object') return { ok: false, errors: ['Response is not a JSON object'] };
 
-  for (const field of ['headline', 'summary', 'whatHappened', 'whyItMatters', 'background'] as const) {
+  for (const field of ['headline', 'summary', 'whatHappened', 'whyItMatters'] as const) {
     if (!isString(a[field])) errors.push(`Missing or empty "${field}"`);
   }
+  // Background may be empty: better no context than invented context.
+  if (a.background != null && typeof a.background !== 'string') errors.push('"background" must be a string');
   if (a.whatHappensNext !== null && a.whatHappensNext !== undefined && !isString(a.whatHappensNext)) {
     errors.push('"whatHappensNext" must be a string or null');
   }
@@ -55,10 +58,15 @@ export function validateAnalysis(raw: unknown, clusterArticleIds: string[]): Val
       whatHappened: a.whatHappened!.trim(),
       keyPoints: supported.slice(0, 7),
       whyItMatters: a.whyItMatters!.trim(),
-      background: a.background!.trim(),
+      background: (a.background ?? '').trim(),
       whatHappensNext: isString(a.whatHappensNext) ? a.whatHappensNext.trim() : null,
       topics: (a.topics ?? []).filter((t): t is TopicId => TOPIC_IDS.includes(t as TopicId)),
-      entities: Array.isArray(a.entities) ? a.entities.filter((e) => isString(e?.name)) : [],
+      entities: Array.isArray(a.entities)
+        ? a.entities
+            .filter((e) => isString(e?.name))
+            .map((e) => ({ name: e.name.trim(), type: ENTITY_TYPES.includes(e.type) ? e.type : 'organization' }))
+            .slice(0, 8)
+        : [],
       confidence: a.confidence!,
     },
   };

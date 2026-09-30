@@ -48,8 +48,13 @@ jobs:
       - name: Install news engine dependencies
         run: npm ci
 
-      - name: Build the feed (fetch → group → feed.json)
+      - name: Build the feed (fetch → group → AI analysis → feed.json)
         run: npm run build-feed
+        env:
+          # Repository secrets (Settings → Secrets and variables → Actions).
+          # GitHub hides their values in logs; they never reach the app.
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       - name: Prepare GitHub Pages
         uses: actions/configure-pages@v5

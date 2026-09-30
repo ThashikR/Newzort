@@ -1,0 +1,222 @@
+/**
+ * Steps 5–7: AI ANALYSIS → FACT EXTRACTION → SUMMARY GENERATION.
+ *
+ * - Only NEW important stories are sent to the AI; earlier results are reused
+ *   from the previously published feed (keeps us inside free-tier limits).
+ * - Providers: Gemini first, Groq as fallback. Keys come from environment
+ *   variables (GitHub Actions secrets) — never from the app or the repo.
+ * - The AI sees only headlines + excerpts with article ids, must return JSON,
+ *   and every key point must cite article ids. validate-analysis.ts drops
+ *   uncited points and rejects weak answers; rejected stories simply stay
+ *   headline-only ("extractive").
+ */
+import type { StoryCluster } from '../../src/types/news';
+
+import { validateAnalysis } from './validate-analysis';
+
+const MAX_NEW_PER_RUN = Number(process.env.AI_MAX_STORIES_PER_RUN ?? 16);
+const BATCH_SIZE = 4;
+
+export interface AiReport {
+  enabled: boolean;
+  reused: number;
+  attempted: number;
+  analysed: number;
+  rejected: number;
+  providerCalls: Record<string, number>;
+  errors: string[];
+}
+
+interface Provider {
+  name: string;
+  call(prompt: string): Promise<string>;
+}
+
+// ── Prompt ────────────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `You are Newzort's news analyst. You write short, neutral, accurate briefings.
+
+STRICT RULES
+- Use ONLY the headlines and excerpts provided. Never add facts, numbers, names, quotes or dates that are not in them.
+- Every key point must cite the ids of the articles that support it in "evidence".
+- "whyItMatters" is interpretation: explain plainly why this could matter to readers, without stating new facts.
+- "background": 1–2 sentences of widely known, uncontroversial context. If unsure, use "".
+- "whatHappensNext": only if the sources describe next steps; otherwise null. Never speculate.
+- No sensational language, no clickbait. Plain English a busy reader understands.
+- confidence: "high" if sources agree on the core facts, "medium" if details differ or coverage is thin, "low" if unclear.
+- importance: 0–100 for a general audience (major national/world impact ≈ 80+, routine ≈ 30–50).
+
+Return ONLY JSON: {"stories": [ ... one object per input story ... ]}
+Each object:
+{
+  "clusterId": string,
+  "headline": string (clear, neutral, ≤ 14 words),
+  "summary": string (1–2 sentences),
+  "whatHappened": string (2–4 simple sentences),
+  "keyPoints": string[] (3–6 short points),
+  "evidence": [{"keyPoint": number (0-based index into keyPoints), "articleIds": string[]}],
+  "whyItMatters": string,
+  "background": string,
+  "whatHappensNext": string | null,
+  "topics": string[] from [india, world, politics, economy, business, technology, ai, cybersecurity, science, space, environment, health, education, finance, startups, geopolitics, sports, entertainment],
+  "entities": [{"name": string, "type": "person"|"organization"|"company"|"country"|"place"}],
+  "confidence": "high"|"medium"|"low",
+  "importance": number
+}`;
+
+function buildPrompt(stories: StoryCluster[]): string {
+  const blocks = stories.map((s) => {
+    const sourceName = new Map(s.sources.map((src) => [src.id, src.name]));
+    const articles = s.articles
+      .map((a) => `  - id: ${a.id}\n    source: ${sourceName.get(a.sourceId) ?? a.sourceId}\n    headline: ${a.headline}\n    excerpt: ${a.excerpt ?? '(none)'}`)
+      .join('\n');
+    return `STORY clusterId=${s.clusterId}\narticles:\n${articles}`;
+  });
+  return `Analyse these ${stories.length} stories. Return JSON only.\n\n${blocks.join('\n\n')}`;
+}
+
+// ── Providers ─────────────────────────────────────────────────────────────────
+
+class RateLimited extends Error {}
+
+function geminiProvider(apiKey: string, model: string): Provider {
+  return {
+    name: `gemini:${model}`,
+    async call(prompt) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(90_000),
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+        }),
+      });
+      if (res.status === 429) throw new RateLimited(`${model} rate limited`);
+      if (!res.ok) throw new Error(`${model} HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+    },
+  };
+}
+
+function groqProvider(apiKey: string, model: string): Provider {
+  return {
+    name: `groq:${model}`,
+    async call(prompt) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        signal: AbortSignal.timeout(90_000),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          temperature: 0.2,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: prompt },
+          ],
+        }),
+      });
+      if (res.status === 429) throw new RateLimited(`${model} rate limited`);
+      if (!res.ok) throw new Error(`${model} HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      return data.choices?.[0]?.message?.content ?? '';
+    },
+  };
+}
+
+function configuredProviders(): Provider[] {
+  const list = (v: string | undefined, fallback: string) => (v || fallback).split(',').map((s) => s.trim()).filter(Boolean);
+  const providers: Provider[] = [];
+  if (process.env.GEMINI_API_KEY) {
+    for (const m of list(process.env.GEMINI_MODELS, 'gemini-2.5-flash,gemini-2.5-flash-lite')) {
+      providers.push(geminiProvider(process.env.GEMINI_API_KEY, m));
+    }
+  }
+  if (process.env.GROQ_API_KEY) {
+    for (const m of list(process.env.GROQ_MODELS, 'llama-3.3-70b-versatile')) {
+      providers.push(groqProvider(process.env.GROQ_API_KEY, m));
+    }
+  }
+  return providers;
+}
+
+// ── Orchestration ─────────────────────────────────────────────────────────────
+
+/** Same set of articles ⇒ the earlier analysis is still valid. */
+const articleKey = (s: StoryCluster) => s.articles.map((a) => a.url).sort().join('|');
+
+function parseStories(text: string): unknown[] {
+  const cleaned = text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+  const parsed = JSON.parse(cleaned) as { stories?: unknown[] } | unknown[];
+  return Array.isArray(parsed) ? parsed : (parsed.stories ?? []);
+}
+
+export async function analyseWithAi(stories: StoryCluster[], previous: StoryCluster[]): Promise<{ stories: StoryCluster[]; report: AiReport }> {
+  const providers = configuredProviders();
+  const report: AiReport = { enabled: providers.length > 0, reused: 0, attempted: 0, analysed: 0, rejected: 0, providerCalls: {}, errors: [] };
+
+  // 1. Reuse earlier AI results for unchanged stories.
+  const prevByKey = new Map(previous.filter((p) => p.analysisMode === 'ai').map((p) => [articleKey(p), p]));
+  const out = stories.map((s) => {
+    const prev = prevByKey.get(articleKey(s));
+    if (!prev) return s;
+    report.reused++;
+    return { ...s, analysisMode: 'ai' as const, analysis: prev.analysis, canonicalHeadline: prev.canonicalHeadline, importanceScore: prev.importanceScore, category: prev.category };
+  });
+  if (!report.enabled) return { stories: out, report };
+
+  // 2. Pick the most important stories still without analysis.
+  const todo = out
+    .filter((s) => s.analysisMode !== 'ai')
+    .sort((a, b) => b.sources.length - a.sources.length || b.importanceScore - a.importanceScore)
+    .slice(0, MAX_NEW_PER_RUN);
+  report.attempted = todo.length;
+
+  const byId = new Map(out.map((s, i) => [s.clusterId, i]));
+  let active = [...providers];
+
+  for (let i = 0; i < todo.length && active.length > 0; i += BATCH_SIZE) {
+    const batch = todo.slice(i, i + BATCH_SIZE);
+    const prompt = buildPrompt(batch);
+    let results: unknown[] | null = null;
+
+    // Try providers in order; drop any that are rate-limited for the rest of this run.
+    while (!results && active.length > 0) {
+      const provider = active[0];
+      try {
+        report.providerCalls[provider.name] = (report.providerCalls[provider.name] ?? 0) + 1;
+        results = parseStories(await provider.call(prompt));
+      } catch (e) {
+        report.errors.push(`${provider.name}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 240));
+        active = active.slice(1);
+      }
+    }
+    if (!results) break;
+
+    for (const story of batch) {
+      const raw = results.find((r) => (r as { clusterId?: string })?.clusterId === story.clusterId);
+      const check = validateAnalysis(raw, story.articles.map((a) => a.id));
+      if (!check.ok) {
+        report.rejected++;
+        report.errors.push(`rejected ${story.clusterId}: ${check.errors.join('; ')}`.slice(0, 240));
+        continue;
+      }
+      const idx = byId.get(story.clusterId)!;
+      const topics = check.summary.topics.length ? check.summary.topics : story.analysis.topics;
+      out[idx] = {
+        ...story,
+        analysisMode: 'ai',
+        canonicalHeadline: check.summary.headline,
+        // Keep our category unless the AI's first topic is more specific than a region.
+        category: topics[0] && !['world', 'india'].includes(topics[0]) ? topics[0] : story.category,
+        importanceScore: Math.round(0.5 * story.importanceScore + 0.5 * check.importance),
+        analysis: { ...check.summary, topics },
+      };
+      report.analysed++;
+    }
+  }
+  return { stories: out, report };
+}
