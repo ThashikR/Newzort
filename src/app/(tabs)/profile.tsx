@@ -9,6 +9,7 @@ import { Card, Divider, Screen, SectionHeader } from '@/components/ui/layout';
 import { OptionCard } from '@/components/ui/option-card';
 import { Segmented } from '@/components/ui/segmented';
 import { useSnackbar } from '@/components/ui/snackbar';
+import { versionLabel } from '@/components/ui/update-notice';
 import { AppText } from '@/components/ui/text';
 import { env } from '@/config/env';
 import { Brand } from '@/constants/brand';
@@ -273,7 +274,7 @@ export default function ProfileScreen() {
             summarises the facts they share, and always links back to the original reporting.
           </AppText>
           <AppText variant="caption">
-            Version {env.appVersion} · {env.useMockData ? 'Demo data' : 'Live data'}
+            Version {versionLabel(env.appVersion)} · {env.useMockData ? 'Demo data' : 'Live data'}
           </AppText>
         </View>
       </Card>

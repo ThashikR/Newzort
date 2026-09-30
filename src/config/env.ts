@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 /**
  * Client environment configuration.
  *
@@ -19,5 +21,6 @@ export const env = {
   apiUrl,
   /** Set EXPO_PUBLIC_USE_MOCK_DATA=true to use the built-in demo stories instead. */
   useMockData: (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'false').toLowerCase() === 'true',
-  appVersion: '0.2.0',
+  /** From app.json "version" — bump it whenever native code changes (see EAS Update notes in README). */
+  appVersion: Constants.expoConfig?.version ?? '0.0.0',
 } as const;

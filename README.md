@@ -64,6 +64,27 @@ docs/             ARCHITECTURE.md
 
 See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the data flow, ranking formula, API contract and security rules.
 
+## Shipping changes to installed apps (EAS Update)
+
+Most changes are JavaScript (screens, text, logic, styles) and can be sent to
+every installed APK over the internet:
+
+```bash
+npx eas-cli@latest update --channel preview --message "What changed"
+```
+
+Installed apps download it in the background and show **"A new version is ready · Restart"**.
+
+**Native changes need a new APK instead:** adding a native library, changing the
+icon, splash screen, app name or permissions. Bump `"version"` in `app.json`
+first (e.g. 0.3.0 → 0.4.0), then run:
+
+```bash
+npx eas-cli@latest build --platform android --profile preview
+```
+
+Updates only reach builds with the same version, so an update can never break an older app.
+
 ## Keeping the C: drive light
 
 - `.npmrc` sends npm's download cache to `F:/dev-cache/npm`.

@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SnackbarProvider } from '@/components/ui/snackbar';
+import { UpdateNotice } from '@/components/ui/update-notice';
 import { useTheme } from '@/hooks/use-theme';
 import { NewsProvider } from '@/state/news-store';
 import { UserProvider, useUser } from '@/state/user-store';
@@ -57,6 +58,7 @@ function RootNavigator() {
           <Stack.Screen name="onboarding" />
         </Stack.Protected>
       </Stack>
+      <UpdateNotice />
     </ThemeProvider>
   );
 }
