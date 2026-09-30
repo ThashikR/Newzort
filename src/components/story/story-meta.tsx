@@ -25,19 +25,21 @@ export function Eyebrow({ story, mustKnow }: { story: StoryCluster; mustKnow?: b
       <AppText variant="caption" color="textTertiary">
         {relativeTime(story.updatedAt)}
       </AppText>
-      {story.isDemo && <DemoBadge />}
+      {story.isDemo ? (
+        <Badge label="DEMO" a11y="Demo story, not real news" />
+      ) : story.analysisMode === 'ai' ? (
+        <Badge label="AI SUMMARY" a11y="Summary written by AI from the listed sources" accent />
+      ) : null}
     </View>
   );
 }
 
-export function DemoBadge() {
+function Badge({ label, a11y, accent }: { label: string; a11y: string; accent?: boolean }) {
   const { colors } = useTheme();
   return (
-    <View
-      style={[styles.badge, { borderColor: colors.border }]}
-      accessibilityLabel="Demo story, not real news">
-      <AppText variant="caption" color="textTertiary" style={styles.badgeText}>
-        DEMO
+    <View style={[styles.badge, { borderColor: accent ? colors.accent : colors.border }]} accessibilityLabel={a11y}>
+      <AppText variant="caption" color={accent ? 'accent' : 'textTertiary'} style={styles.badgeText}>
+        {label}
       </AppText>
     </View>
   );

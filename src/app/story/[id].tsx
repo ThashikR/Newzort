@@ -203,9 +203,11 @@ function AiAnalysis({ story }: { story: StoryCluster }) {
         <AppText variant="body">{a.whyItMatters}</AppText>
       </View>
 
-      <Section title="Background">
-        <AppText variant="body">{a.background}</AppText>
-      </Section>
+      {a.background ? (
+        <Section title="Background">
+          <AppText variant="body">{a.background}</AppText>
+        </Section>
+      ) : null}
 
       <Section title="What happens next?">
         <AppText variant="body" color={a.whatHappensNext ? 'text' : 'textSecondary'}>
@@ -226,6 +228,13 @@ function AiAnalysis({ story }: { story: StoryCluster }) {
           {CONFIDENCE_TEXT[a.confidence]}
         </AppText>
       </View>
+
+      {!story.isDemo && (
+        <AppText variant="caption" color="textTertiary">
+          This summary was written by AI using only the headlines and excerpts of the sources below, and every key point is
+          checked against them. AI can still make mistakes — open the original articles for the full story.
+        </AppText>
+      )}
     </>
   );
 }
